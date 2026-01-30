@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const BACKEND_URL = process.env.BACKEND_URL!;
 
-async function handler(req: NextRequest, { params }: { params: { path: string[] } }) {
+async function handler(req: NextRequest, props: { params: Promise<{ path: string[] }> }) {
+  const params = await props.params;
   const url = `${BACKEND_URL}/${params.path.join('/')}`;
 
   const res = await fetch(url, {

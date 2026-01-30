@@ -10,6 +10,7 @@ import {
 import '../styles/globals.css';
 import SmoothScroll from '@/components/SmoothScroll';
 import { Toaster } from 'sonner';
+import { Providers } from './Providers';
 
 const manrope = Manrope({
   variable: '--font-manrope',
@@ -55,7 +56,8 @@ export default function RootLayout({
       <body
         className={`${manrope.variable} ${outfit.variable} ${inter.variable} ${outfit.variable} ${garamond.variable} ${roboto.variable} ${jakarta.variable} antialiased`}
       >
-        
+
+        <Providers>
           <Toaster
             position="top-center"
             richColors
@@ -64,8 +66,9 @@ export default function RootLayout({
               duration: 4000,
             }}
           />
-        {children}
-       
+          {children}
+        </Providers>
+
       </body>
     </html>
   );
