@@ -6,23 +6,32 @@ async function handler(req: NextRequest, props: { params: Promise<{ path: string
   const params = await props.params;
   const url = `${BACKEND_URL}/${params.path.join('/')}`;
 
+  const headers = new Headers();
+  const cookie = req.headers.get('cookie');
+  if (cookie) headers.set('cookie', cookie);
+
+  const contentType = req.headers.get('content-type');
+  if (contentType) headers.set('content-type', contentType);
+
   const res = await fetch(url, {
     method: req.method,
-    headers: {
-      cookie: req.headers.get('cookie') || '',
-      'content-type': 'application/json',
-    },
-    body: req.method === 'GET' ? undefined : await req.text(),
+    headers,
+    body: req.method === 'GET' ? undefined : await req.arrayBuffer(),
     credentials: 'include',
   });
 
-  const data = await res.text();
+  const data = await res.arrayBuffer();
   const response = new NextResponse(data, { status: res.status });
 
+  // Copy key headers from backend response
   const setCookie = res.headers.get('set-cookie');
   if (setCookie) response.headers.set('set-cookie', setCookie);
+  
+  const resContentType = res.headers.get('content-type');
+  if (resContentType) response.headers.set('content-type', resContentType);
 
   return response;
+
 }
 
 export const GET = handler;

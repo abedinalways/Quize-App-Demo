@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 import React, { useRef, useState } from 'react';
-import { getUser } from '@/lib/auth';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export default function Header() {
-  const [userName] = useState(() => getUser()?.name ?? '');
+
   const textRef = useRef<HTMLHeadingElement | null>(null);
 
   return (
@@ -26,7 +26,7 @@ export default function Header() {
           />
           <div className="space-y-1">
             <h2 ref={textRef} className="md:text-2xl text-md font-bold">
-              Dr. {userName}
+              Dr. 
             </h2>
             {/* <p className="md:text-sm text-xs">
               Stay up to date on your current progress

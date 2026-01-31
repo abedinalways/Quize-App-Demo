@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { getUser } from '@/lib/auth';
+
 import Image from 'next/image';
 import gsap from 'gsap';
 import FollowersFollowingModal from './FollowersFollowingModal';
@@ -82,7 +82,7 @@ const followingData = [
   },
 ];
 export const WelcomeBanner = () => {
-  const [userName] = useState(() => getUser()?.name ?? '');
+  
   const textRef = useRef<HTMLHeadingElement | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'followers' | 'following'>(
@@ -103,7 +103,7 @@ export const WelcomeBanner = () => {
         }
       );
     }
-  }, [userName]);
+  }, []);
 
   const formattedDate = new Date().toLocaleDateString('en-US', {
     month: 'long',
@@ -131,7 +131,7 @@ export const WelcomeBanner = () => {
           <div className=" flex items-center justify-center">
             <div className="flex flex-col  gap-2 justify-center">
               <h2 ref={textRef} className="md:text-4xl text-lg font-bold">
-                Welcome, Dr. {userName}!
+                Welcome, Dr. !
               </h2>
 
               <p className="md:text-[18px] text-xs">

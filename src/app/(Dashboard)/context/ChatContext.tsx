@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { io, Socket } from 'socket.io-client';
 
 export type Sender = 'me' | 'doctor';
 
@@ -59,6 +60,7 @@ type ChatContextType = {
   sendMessage: (text: string, attachments?: File[]) => void;
   isTyping: boolean;
   setTyping: (v: boolean) => void;
+  socket: Socket | null;
 };
 
 const ChatContext = createContext<ChatContextType | null>(null);
@@ -70,6 +72,44 @@ export const useChat = () => {
 };
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
+  const [socket, setSocket] = useState<Socket | null>(null);
+
+  // Initialize Socket Connection
+  useEffect(() => {
+    // TODO: Configure your actual Socket URL in environment variables
+    // e.g., process.env.NEXT_PUBLIC_SOCKET_URL
+    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000';
+    
+    console.log('Initializing socket connection to:', socketUrl);
+    
+    const socketInstance = io(socketUrl, {
+      withCredentials: true,
+      transports: ['websocket'], // Prefer WebSocket transport
+      autoConnect: true,
+    });
+
+    socketInstance.on('connect', () => {
+      console.log('Socket connected:', socketInstance.id);
+    });
+
+    socketInstance.on('connect_error', (err) => {
+      console.error('Socket connection error:', err);
+    });
+
+    socketInstance.on('disconnect', () => {
+      console.log('Socket disconnected');
+    });
+
+    // Setup global listeners here if needed
+    // socketInstance.on('receive_message', handleReceiveMessage);
+
+    setSocket(socketInstance);
+
+    return () => {
+      socketInstance.disconnect();
+    };
+  }, []);
+
   const [conversations, setConversations] = useState<Conversation[]>([
     {
       id: '1',
@@ -155,6 +195,15 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const sendMessage = (text: string, attachments: File[] = []) => {
     if (!text.trim() && attachments.length === 0) return;
 
+    const newMessage: Message = {
+      id: crypto.randomUUID(),
+      sender: 'me',
+      text: text || undefined,
+      attachments: attachments.length ? attachments : undefined,
+      createdAt: Date.now(),
+    };
+
+    // Optimistic Update
     setConversations(prev =>
       prev.map(conv =>
         conv.id === activeId
@@ -162,18 +211,20 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
               ...conv,
               messages: [
                 ...conv.messages,
-                {
-                  id: crypto.randomUUID(),
-                  sender: 'me',
-                  text: text || undefined,
-                  attachments: attachments.length ? attachments : undefined,
-                  createdAt: Date.now(),
-                },
+                newMessage,
               ],
             }
           : conv
       )
     );
+
+    // Emit to Socket
+    if (socket) {
+      socket.emit('send_message', {
+        conversationId: activeId,
+        message: newMessage
+      });
+    }
 
     setIsTyping(false);
   };
@@ -187,6 +238,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         sendMessage,
         isTyping,
         setTyping: setIsTyping,
+        socket,
       }}
     >
       {children}
