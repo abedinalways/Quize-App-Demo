@@ -69,7 +69,7 @@ export default function RootLayout({
               duration: 4000,
             }}
           />
-          <AuthProvider>{children}</AuthProvider>
+      {children}
         </Providers>
       </body>
     </html>

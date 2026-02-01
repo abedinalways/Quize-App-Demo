@@ -2,13 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const BACKEND_URL = process.env.BACKEND_URL!;
 
-async function handler(req: NextRequest, props: { params: Promise<{ path: string[] }> }) {
+async function handler(
+  req: NextRequest,
+  props: { params: Promise<{ path: string[] }> },
+) {
   const params = await props.params;
   const url = `${BACKEND_URL}/${params.path.join('/')}`;
 
   const headers = new Headers();
+
+  // ✅ forward cookies
   const cookie = req.headers.get('cookie');
   if (cookie) headers.set('cookie', cookie);
+
+  // ✅ READ token from cookie & set Authorization header
+  const tokenCookie = req.cookies.get('token')?.value;
+  if (tokenCookie) {
+    headers.set('authorization', tokenCookie);
+  }
 
   const contentType = req.headers.get('content-type');
   if (contentType) headers.set('content-type', contentType);
@@ -23,15 +34,14 @@ async function handler(req: NextRequest, props: { params: Promise<{ path: string
   const data = await res.arrayBuffer();
   const response = new NextResponse(data, { status: res.status });
 
-  // Copy key headers from backend response
+  // forward set-cookie back to browser
   const setCookie = res.headers.get('set-cookie');
   if (setCookie) response.headers.set('set-cookie', setCookie);
-  
+
   const resContentType = res.headers.get('content-type');
   if (resContentType) response.headers.set('content-type', resContentType);
 
   return response;
-
 }
 
 export const GET = handler;

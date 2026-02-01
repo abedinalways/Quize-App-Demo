@@ -1,33 +1,27 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useMeQuery } from '@/app/redux/api/authApi';
 import { useAppDispatch } from '@/app/redux/hook';
 import { setUser, clearUser } from '@/app/redux/authSlice';
 
-export default function AuthProvider({ children }) {
+export default function AuthProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const dispatch = useAppDispatch();
-  const router = useRouter();
-
-  const { data, isError, isSuccess } = useMeQuery();
+  const { data, isSuccess, isError } = useMeQuery();
 
   useEffect(() => {
-    if (data) {
+    if (isSuccess && data) {
       dispatch(setUser(data));
-
-      // ✅ Redirect AFTER user is set
-      if (data.role === 'admin') {
-        router.replace('/dashboard/admin');
-      } else {
-        router.replace('/dashboard/user');
-      }
     }
 
     if (isError) {
       dispatch(clearUser());
     }
-  }, [data, isError]);
+  }, [isSuccess, isError, data, dispatch]);
 
   return <>{children}</>;
 }

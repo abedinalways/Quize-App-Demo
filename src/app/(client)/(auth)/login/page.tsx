@@ -8,23 +8,36 @@ import { toast } from 'sonner';
 import { useLoginMutation } from '@/app/redux/api/authApi';
 
 export default function LoginPage() {
-  const router = useRouter();
+
   const [error, setError] = useState('');
 
   const [login, { isLoading }] = useLoginMutation();
-
+  const router = useRouter();
   const handleLogin = async (data: { email: string; password: string }) => {
     setError('');
 
     try {
       
       await login(data).unwrap();
-
-      toast.success('Login successful', {
-        description: 'Redirecting to dashboard...',
+      const res = await fetch('/api/proxy/auth/me', {
+        credentials: 'include',
       });
 
-    } catch (err) {
+      const user = await res.json();
+
+      toast.success('Login successful');
+
+      if (user.role === 'admin') {
+        router.replace('/dashboard/admin');
+      } else {
+        router.replace('/dashboard/user');
+      }
+
+  
+  }
+      
+
+    catch (err) {
       const error = err as { data?: { message?: string } };
       const message =
         error?.data?.message ||

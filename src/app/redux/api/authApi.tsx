@@ -14,12 +14,19 @@ export const authApi = baseApi.injectEndpoints({
         url: '/auth/login',
         method: 'POST',
         body,
+        credentials: 'include', 
       }),
+      invalidatesTags: ['Auth'],
     }),
 
     // 🔹 get logged-in user
     me: builder.query<AuthUser, void>({
-      query: () => '/auth/me',
+      query: () => ({
+        url: '/profile',
+        method: 'GET',
+        credentials: 'include', 
+      }),
+      providesTags: ['Auth'],
     }),
 
     // 🔹 logout
@@ -27,7 +34,9 @@ export const authApi = baseApi.injectEndpoints({
       query: () => ({
         url: '/auth/logout',
         method: 'POST',
+        credentials: 'include', 
       }),
+      invalidatesTags: ['Auth'],
     }),
   }),
 });

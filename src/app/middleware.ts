@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export function middleware(req: NextRequest) {
-  const loggedIn = req.cookies.get('accessToken');
+  const token= req.cookies.get('token');
 
-  if (!loggedIn && req.nextUrl.pathname.startsWith('/dashboard')) {
-    return NextResponse.redirect(new URL('/login', req.url));
-  }
+if (!token && req.nextUrl.pathname.startsWith('/dashboard')) {
+  return NextResponse.redirect(new URL('/login', req.url));
+}
 
-  return NextResponse.next();
+return NextResponse.next();
 }
 
 export const config = {

@@ -15,15 +15,19 @@ interface UserLayoutProps {
 export default function UserLayout({ children }: UserLayoutProps) {
   const router = useRouter();
   const role = useAppSelector(s => s.auth.user?.role);
+  console.log(role, 'kon')
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (!role) router.replace('/login');
+    if (role && role !== 'user') {
+      router.replace('/login');
+    }
   }, [role]);
+
 
   return (
     <div className="min-h-screen flex">
-      <aside className="hidden lg:block w-55">
+      <aside className="block w-55">
         <Sidebar />
       </aside>
 

@@ -52,7 +52,7 @@ export default function Topbar({ onMenuClick }: TopbarProps = {}) {
         </Link>
 
         <span className="hidden sm:block font-semibold text-gray-700">
-          {user?.name}
+          hdskj
         </span>
       </div>
     </header>

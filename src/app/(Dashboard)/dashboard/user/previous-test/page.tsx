@@ -1,6 +1,6 @@
 'use client'
 import { TestStats, type StatItem } from '@/components/previous-test/TestStats';
-import data from '../../../../../public/data/test-history.json';
+import data from '../../../../../../public/data/test-history.json';
 import {
   TestHistory,
   type TestItem,

@@ -15,9 +15,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (!role) router.replace('/login');
-    else if (role !== 'admin') router.replace('/dashboard/user');
+    if (role && role !== 'admin') {
+      router.replace('/login');
+    }
   }, [role]);
+
 
   return (
     <div className="min-h-screen flex">

@@ -3,8 +3,12 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const baseApi = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
-    baseUrl: '/api/proxy',
+    baseUrl: process.env.NEXT_PUBLIC_API_ENDPOINT,
     credentials: 'include',
+    prepareHeaders: headers => {
+      return headers;
+    },
   }),
+  tagTypes: ['Auth'],
   endpoints: () => ({}),
 });
