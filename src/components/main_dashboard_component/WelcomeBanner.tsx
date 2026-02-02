@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import gsap from 'gsap';
 import FollowersFollowingModal from './FollowersFollowingModal';
+import { useMeQuery } from '@/app/redux/api/authApi';
 const followersData = [
   {
     id: '1',
@@ -81,7 +82,11 @@ const followingData = [
     avatar: '/images/dashboard/message/doctor.png',
   },
 ];
+
 export const WelcomeBanner = () => {
+  
+  const { data: user, error } = useMeQuery(); 
+  // console.log('User adhakjd:', user, error);
   
   const textRef = useRef<HTMLHeadingElement | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -110,18 +115,23 @@ export const WelcomeBanner = () => {
     day: 'numeric',
     year: 'numeric',
   });
+  
 
+  const avatar =
+    user?.avatar && user.avatar.startsWith('http')
+      ? user.avatar.replace(/([^:]\/)\/+/g, '$1')
+      : '/images/dashboard/doctor.png';
   return (
     <>
       <div className="px-4 pt-2 d:pt-0 background text-white rounded-lg shadow-lg relative overflow-hidden font-[manrope]">
         <div className="md:flex  items-center justify-evenly py-4 relative z-10">
           <div className="flex flex-col justify-between items-center  gap-4">
-            <div className="rounded-full border-4 border-[#B79E6B] bg-red-400 w-fit">
+            <div className="rounded-full border-4 border-[#B79E6B] w-fit">
               <Image
-                src="/images/dashboard/doctor.png"
+                src={avatar}
                 width={182}
                 height={182}
-                alt="doctor"
+                alt=""
                 className=""
               />
             </div>
@@ -131,7 +141,7 @@ export const WelcomeBanner = () => {
           <div className=" flex items-center justify-center">
             <div className="flex flex-col  gap-2 justify-center">
               <h2 ref={textRef} className="md:text-4xl text-lg font-bold">
-                Welcome, Dr. !
+                Welcome, {user?.name}! 
               </h2>
 
               <p className="md:text-[18px] text-xs">
@@ -148,7 +158,7 @@ export const WelcomeBanner = () => {
                   className="flex flex-col cursor-pointer hover:opacity-80 transition"
                 >
                   <span className="md:text-lg text-xs font-semibold cursor-pointer">
-                    333 Followers
+                    {user?.followings} Followers
                   </span>
                 </button>
                 <span className="flex items-center opacity-60">|</span>
@@ -161,7 +171,7 @@ export const WelcomeBanner = () => {
                   className="flex flex-col cursor-pointer hover:opacity-80 transition"
                 >
                   <span className="md:text-lg text-xs font-semibold cursor-pointer">
-                    666 Following
+                    {user?.followers} Following
                   </span>
                 </button>
               </div>

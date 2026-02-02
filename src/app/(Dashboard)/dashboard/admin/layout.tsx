@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 
 
 import Topbar from '../topbar/Topbar';
-import Sidebar from '../sidebar/Sidebar';
+// import Sidebar from '../sidebar/Sidebar';
 import { useAppSelector } from '@/app/redux/hook';
+import Sidebar from '../sidebar/Sidebar';
 
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -23,7 +24,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen flex">
-      <aside className="hidden lg:block w-55">
+      <aside className="hidden lg:block w-55 bg-yellow-600">
         <Sidebar />
       </aside>
 

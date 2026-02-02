@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAppSelector } from '@/app/redux/hook';
+// import { useAppSelector } from '@/app/redux/hook';
 import { useMeQuery } from '@/app/redux/api/authApi'; // Ensure you're using the correct query here
 import AuthProvider from '@/app/AuthProvider';
 
@@ -14,7 +14,6 @@ export default function DashboardLayout({
   const router = useRouter();
   const { data: user, error } = useMeQuery(); 
 
-  // Debugging: Check if the user data is correctly fetched
   console.log('User from useMeQuery:', user);
 
   useEffect(() => {

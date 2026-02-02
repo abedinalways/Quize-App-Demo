@@ -5,10 +5,15 @@ export const baseApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: process.env.NEXT_PUBLIC_API_ENDPOINT,
     credentials: 'include',
-    prepareHeaders: headers => {
+    prepareHeaders: (headers, { getState }) => {
+      const token = getState()?.auth?.auth?.token;
+
+      if (token) {
+        headers.set('authorization', `Bearer ${token}`);
+      }
       return headers;
     },
   }),
-  tagTypes: ['Auth'],
+  tagTypes: ['Auth', 'profileStat'],
   endpoints: () => ({}),
 });

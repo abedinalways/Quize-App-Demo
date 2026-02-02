@@ -19,11 +19,13 @@ export default function LoginPage() {
     try {
       
       await login(data).unwrap();
-      const res = await fetch('/api/proxy/auth/me', {
+     
+      const res = await fetch('http://192.168.7.42:4004/api/profile', {
         credentials: 'include',
       });
 
       const user = await res.json();
+      console.log(user, 'kdskkssssssss')
 
       toast.success('Login successful');
 

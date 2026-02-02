@@ -1,4 +1,5 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import Cookies from 'js-cookie';
 
 export type Role = 'admin' | 'user';
 
@@ -7,16 +8,56 @@ export interface AuthUser {
   name: string;
   email: string;
   role: Role;
+  avatar: string;
+  followers: string;
+  followings: string;
 }
+export interface AuthorizationResponse {
+  success: boolean;
+  message: string;
+  authorization: {
+    type: string;
+    access_token: string;
+    refresh_token: string;
+  };
+  type: 'user' | 'admin';
+}
+interface Credential {
+  token: string | null | false;
+  role?: Role;
+}
+interface AuthState {
+  user: AuthUser | null;
+  auth: Credential;
+}
+const initialState: AuthState = {
+  user: null as AuthUser | null,
+  auth: { token: false },
+};
 
 const authSlice = createSlice({
   name: 'auth',
-  initialState: {
-    user: null as AuthUser | null,
-  },
+  initialState,
   reducers: {
     setUser(state, action) {
       state.user = action.payload;
+    },
+    setAuth(state, action: PayloadAction<Credential>) {
+      state.auth = action.payload;
+
+      if (state.auth.token) {
+        Cookies.set('token', state.auth.token, {
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'Lax',
+        });
+      }
+
+      if (state.auth.role) {
+        Cookies.set('role', state.auth.role, {
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'Lax',
+        });
+      }
     },
     clearUser(state) {
       state.user = null;
@@ -24,5 +65,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, clearUser } = authSlice.actions;
+export const { setUser, clearUser, setAuth } = authSlice.actions;
 export default authSlice.reducer;

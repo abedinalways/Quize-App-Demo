@@ -1,5 +1,5 @@
 import { baseApi } from './baseApi';
-import { AuthUser } from '../authSlice';
+import { AuthorizationResponse, AuthUser, setAuth } from '../authSlice';
 
 interface LoginPayload {
   email: string;
@@ -9,14 +9,29 @@ interface LoginPayload {
 export const authApi = baseApi.injectEndpoints({
   endpoints: builder => ({
     // 🔹 login
-    login: builder.mutation<void, LoginPayload>({
+    login: builder.mutation<AuthorizationResponse, LoginPayload>({
       query: body => ({
         url: '/auth/login',
         method: 'POST',
         body,
-        credentials: 'include', 
+        credentials: 'include',
       }),
       invalidatesTags: ['Auth'],
+      onQueryStarted: async (arg, { dispatch, queryFulfilled }) => {
+        try {
+          const { data } = await queryFulfilled;
+          console.log(data);
+
+          const {
+            authorization: { access_token },
+            type: role,
+          } = data;
+
+          dispatch(setAuth({ token: access_token, role }));
+        } catch (error) {
+          console.error('Login mutation error:', error);
+        }
+      },
     }),
 
     // 🔹 get logged-in user
@@ -24,17 +39,16 @@ export const authApi = baseApi.injectEndpoints({
       query: () => ({
         url: '/profile',
         method: 'GET',
-        credentials: 'include', 
+        credentials: 'include',
       }),
-      providesTags: ['Auth'],
+      transformResponse: (res: { data: AuthUser }) => res.data,
     }),
-
     // 🔹 logout
     logout: builder.mutation<void, void>({
       query: () => ({
         url: '/auth/logout',
         method: 'POST',
-        credentials: 'include', 
+        credentials: 'include',
       }),
       invalidatesTags: ['Auth'],
     }),
