@@ -9,6 +9,7 @@ export interface DiscoverProfile {
   current_practice?: string;
   suggestion_rank: number;
   search_rank: number;
+  is_following: boolean;
 }
 
 export interface DiscoverProfileResponse {
@@ -36,6 +37,7 @@ export const discoverApi = baseApi.injectEndpoints({
         },
         credentials: 'include',
       }),
+      providesTags: ['DiscoverProfiles'],
     }),
   }),
 });

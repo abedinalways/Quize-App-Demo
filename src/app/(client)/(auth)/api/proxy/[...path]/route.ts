@@ -18,7 +18,7 @@ async function handler(
   // ✅ READ token from cookie & set Authorization header
   const tokenCookie = req.cookies.get('token')?.value;
   if (tokenCookie) {
-    headers.set('authorization', tokenCookie);
+    headers.set('authorization', `Bearer ${tokenCookie}`);
   }
 
   const contentType = req.headers.get('content-type');

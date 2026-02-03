@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { AuthState } from '../authSlice';
 
 export const baseApi = createApi({
   reducerPath: 'api',
@@ -6,7 +7,7 @@ export const baseApi = createApi({
     baseUrl: process.env.NEXT_PUBLIC_API_ENDPOINT,
     credentials: 'include',
     prepareHeaders: (headers, { getState }) => {
-      const token = getState()?.auth?.auth?.token;
+      const token = (getState() as { auth: AuthState }).auth.auth.token;
 
       if (token) {
         headers.set('authorization', `Bearer ${token}`);
@@ -14,6 +15,6 @@ export const baseApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ['Auth', 'profileStat'],
+  tagTypes: ['Auth', 'profileStat', 'DiscoverProfiles'],
   endpoints: () => ({}),
 });

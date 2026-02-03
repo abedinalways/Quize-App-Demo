@@ -22,11 +22,11 @@ export interface AuthorizationResponse {
   };
   type: 'user' | 'admin';
 }
-interface Credential {
+export interface Credential {
   token: string | null | false;
   role?: Role;
 }
-interface AuthState {
+export interface AuthState {
   user: AuthUser | null;
   auth: Credential;
 }

@@ -71,7 +71,7 @@ export default function Sidebar({
     </Link>
   );
 
-  /* 🖥 DESKTOP */
+  /*DESKTOP */
   if (!mobile) {
     return (
       <aside className="h-screen! w-55 background border-r flex flex-col text-white font-[manrope] overflow-y-auto">
