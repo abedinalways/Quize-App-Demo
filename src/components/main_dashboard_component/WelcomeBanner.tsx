@@ -86,7 +86,7 @@ const followingData = [
 export const WelcomeBanner = () => {
   
   const { data: user, error } = useMeQuery(); 
-  // console.log('User adhakjd:', user, error);
+  
   
   const textRef = useRef<HTMLHeadingElement | null>(null);
   const [modalOpen, setModalOpen] = useState(false);

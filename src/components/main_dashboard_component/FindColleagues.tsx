@@ -11,12 +11,12 @@ import { Card } from '@/components/ui/card';
 import Btn from '../reusable/button/Btn';
 
 import { useDiscoverProfilesQuery } from '@/app/redux/api/discoverApi';
-import { useToggleFollowMutation } from '@/app/redux/api/followApi';
+
 
 const FindColleagues = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAll, setShowAll] = useState(false);
-  const [activeFollowId, setActiveFollowId] = useState<string | null>(null);
+ 
 
   const { data, isLoading, isFetching, refetch } = useDiscoverProfilesQuery({
     page: 1,
@@ -24,7 +24,7 @@ const FindColleagues = () => {
     search: searchQuery,
   });
 
-  const [toggleFollow] = useToggleFollowMutation();
+
 
   const colleagues = data?.data ?? [];
 
@@ -35,20 +35,7 @@ const FindColleagues = () => {
       : name.slice(0, 2).toUpperCase();
   };
 
-  // const handleFollow = async (userId: string) => {
-  //   try {
-  //     setActiveFollowId(userId);
-  //     await toggleFollow(userId).unwrap();
-
-      
-  //     refetch();
-  //   } catch (err) {
-  //     console.error('Follow/Unfollow failed', err);
-      
-  //   } finally {
-  //     setActiveFollowId(null);
-  //   }
-  // };
+ 
 
   return (
     <div className="w-full max-w-7xl mx-auto bg-white border rounded-xl shadow-sm p-4 font-[manrope]">
@@ -110,26 +97,15 @@ const FindColleagues = () => {
               <div className="mt-4 flex gap-2">
                 <Btn
                   href="/dashboard/messages"
-                  className="flex-1 bg-[#01503b] text-white"
+                  className="flex-1 bg-[#01503b] text-white py-2"
                 >
                   Message
                 </Btn>
 
                 <button
                   type="button"
-                  onClick={e => {
-                    e.stopPropagation();
-                    handleFollow(colleague.id);
-                  }}
-                  disabled={activeFollowId === colleague.id}
-                  className="flex-1 border text-[#01503b]"
-                >
-                  {activeFollowId === colleague.id
-                    ? 'Please wait...'
-                    : colleague.is_following
-                      ? 'Unfollow'
-                      : 'Follow'}
-                </button>
+                  className="flex-1 bg-white text-[#01503b] border border-green-950 rounded-md"
+                ></button>
               </div>
             )}
           </Card>
