@@ -5,7 +5,7 @@ import { TrendingUp, Loader2 } from 'lucide-react';
 
 import CircularProgressData from './CircularProgress';
 import TestStatIcon from '../reusable/icons/TestStatIcon';
-import GraphIcon from '../reusable/icons/GraphIcon';
+
 import Image from 'next/image';
 
 // Type definitions
