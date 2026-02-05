@@ -1,13 +1,10 @@
+'use client'
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import AnimatedProgressCircle from './AnimatedProgressCircle';
 import StatIcon from '../ui/StatIcon';
 import QuestionIcon from '../reusable/icons/QuestionIcon';
 import { useGetStatisticsQuery } from '@/app/redux/api/StatisTicsApi';
-
-
-
-
 
 
 export default function PerformanceSummary() {
@@ -29,7 +26,6 @@ export default function PerformanceSummary() {
     );
   }
 
-  // Accessing the nested 'data' object from the API response
   const { performance: p, question_bank: qb } = data.data;
 
   return (
@@ -55,7 +51,7 @@ export default function PerformanceSummary() {
               <div className="flex items-center justify-between bg-[#ecfdf5] p-6 rounded-[8px]">
                 <span className="text-gray-600">Total Correct</span>
                 <span className="font-semibold text-green-700">
-                  {p.total_correct}
+                  {p?.total_correct}
                 </span>
               </div>
               <div className="flex items-center justify-between bg-[#fef2f2] px-[24px] py-[24px] rounded-[8px]">
