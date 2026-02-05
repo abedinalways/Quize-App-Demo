@@ -1,11 +1,11 @@
-'use client'
+'use client';
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import AnimatedProgressCircle from './AnimatedProgressCircle';
 import StatIcon from '../ui/StatIcon';
 import QuestionIcon from '../reusable/icons/QuestionIcon';
 import { useGetStatisticsQuery } from '@/app/redux/api/StatisTicsApi';
-
 
 export default function PerformanceSummary() {
   const { data, isLoading } = useGetStatisticsQuery();
@@ -17,16 +17,6 @@ export default function PerformanceSummary() {
       </div>
     );
   }
-
-  if (!data || !data.data) {
-    return (
-      <div className="p-6 text-sm text-muted-foreground">
-        No performance data available
-      </div>
-    );
-  }
-
-  const { performance: p, question_bank: qb } = data.data;
 
   return (
     <section className="grid gap-6 mt-6 font-[manrope]">
@@ -41,29 +31,32 @@ export default function PerformanceSummary() {
               Your Performance
             </CardTitle>
           </CardHeader>
+
           <CardContent className="flex gap-6">
-            {/* Updated value to correct_percentage_avg */}
             <AnimatedProgressCircle
-              value={p.correct_percentage_avg}
+              value={data?.data?.performance?.correct_percentage_avg ?? 0}
               color="green"
             />
+
             <div className="space-y-3 text-[20px] flex-1 items-center">
               <div className="flex items-center justify-between bg-[#ecfdf5] p-6 rounded-[8px]">
                 <span className="text-gray-600">Total Correct</span>
                 <span className="font-semibold text-green-700">
-                  {p?.total_correct}
+                  {data?.data?.performance?.total_correct ?? 0}
                 </span>
               </div>
+
               <div className="flex items-center justify-between bg-[#fef2f2] px-[24px] py-[24px] rounded-[8px]">
                 <span className="text-gray-600">Total Incorrect</span>
                 <span className="font-semibold text-red-600">
-                  {p.total_incorrect}
+                  {data?.data?.performance?.total_incorrect ?? 0}
                 </span>
               </div>
+
               <div className="flex items-center justify-between card-bg px-[24px] py-[24px] rounded-[8px]">
                 <span className="text-gray-600">Total Omitted</span>
                 <span className="font-semibold text-gray-700">
-                  {p.total_omitted}
+                  {data?.data?.performance?.total_omitted ?? 0}
                 </span>
               </div>
             </div>
@@ -80,29 +73,32 @@ export default function PerformanceSummary() {
               Question Bank Usage
             </CardTitle>
           </CardHeader>
+
           <CardContent className="flex items-center gap-6">
-            {/* Updated value to progress_percentage */}
             <AnimatedProgressCircle
-              value={qb.progress_percentage}
+              value={data?.data?.question_bank?.progress_percentage ?? 0}
               color="brown"
             />
+
             <div className="space-y-[12px] text-[20px] flex-1 items-center">
               <div className="flex items-center justify-between card-bg01 px-[24px] py-[24px] rounded-[8px]">
                 <span className="text-gray-600">Used Questions</span>
                 <span className="font-semibold text-amber-700">
-                  {qb.used_questions}
+                  {data?.data?.question_bank?.used_questions ?? 0}
                 </span>
               </div>
+
               <div className="flex items-center justify-between card-bg px-[24px] py-[24px] rounded-[8px]">
                 <span className="text-gray-600">Unused Questions</span>
                 <span className="font-semibold text-gray-700">
-                  {qb.unused_questions}
+                  {data?.data?.question_bank?.unused_questions ?? 0}
                 </span>
               </div>
+
               <div className="flex items-center justify-between bg-[#ecfdf5] px-[24px] py-[24px] rounded-[8px]">
                 <span className="text-gray-600">Total Questions</span>
                 <span className="font-semibold text-gray-900">
-                  {qb.total_questions}
+                  {data?.data?.question_bank?.total_questions ?? 0}
                 </span>
               </div>
             </div>
