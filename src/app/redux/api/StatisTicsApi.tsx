@@ -45,7 +45,7 @@ export const statisTicsApi = baseApi.injectEndpoints({
   endpoints: builder => ({
     getStatistics: builder.query<Root, void>({
       query: () => ({
-        url: '/statistics',
+        url: '/statistic',
         method: 'GET',
         credentials: 'include',
       }),
