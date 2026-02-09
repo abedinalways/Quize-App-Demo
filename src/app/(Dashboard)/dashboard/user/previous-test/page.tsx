@@ -1,5 +1,5 @@
 'use client'
-import { TestStats, type StatItem } from '@/components/previous-test/TestStats';
+import { TestStats} from '@/components/previous-test/TestStats';
 import data from '../../../../../../public/data/test-history.json';
 import {
   TestHistory,
@@ -21,7 +21,7 @@ export default function PreviousTestPage() {
       <p className="text-[18px] text-[#6b7280] leading-[130%] font-normal">
         Review your previous tests
       </p>
-      <TestStats stats={data.stats as StatItem[]} />
+      <TestStats />
       <div className="rounded-[12px] p-[18px] border border-[#e9e9e9] shadow-lg mt-6">
         <div className="flex items-center justify-between">
           <h2 className="text-[#01281e] font-bold text-[20px]">
