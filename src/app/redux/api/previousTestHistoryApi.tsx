@@ -1,20 +1,13 @@
-import { baseApi } from "./baseApi";
+import { baseApi } from './baseApi';
 
-export interface Root {
-  success: boolean;
-  message: string;
-  data: Daum[];
-  meta_data: MetaData;
-}
-
-export interface Daum {
+export interface TestHistoryItem {
   id: string;
   created_at: string;
   test_mode: string[];
   difficulty: string;
   topic: string[];
   total_questions: number;
-  score: number;
+  score: number | null;
   is_completed: boolean;
 }
 
@@ -24,9 +17,19 @@ export interface MetaData {
   total: number;
 }
 
+export interface PreviousTestHistoryResponse {
+  success: boolean;
+  message: string;
+  data: TestHistoryItem[];
+  meta_data: MetaData;
+}
+
 export const previousTestHistoryApi = baseApi.injectEndpoints({
   endpoints: builder => ({
-    getTestHistoryStats: builder.query<Daum, void>({
+    getPreviousTestHistoryStats: builder.query<
+      PreviousTestHistoryResponse,
+      void
+    >({
       query: () => ({
         url: '/test/histories',
         method: 'GET',
@@ -37,4 +40,4 @@ export const previousTestHistoryApi = baseApi.injectEndpoints({
   overrideExisting: false,
 });
 
-export const { useGetTestHistoriesQuery } = previousTestHistoryApi;
+export const { useGetPreviousTestHistoryStatsQuery } = previousTestHistoryApi;

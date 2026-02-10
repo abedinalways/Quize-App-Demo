@@ -32,6 +32,10 @@ const TOPICS: string[] = [
 
 const DIFFICULTY_LEVELS = ['Intern', 'Senior', 'Boards'] as const;
 
+
+const normalizeTopic = (topic: string) =>
+  topic.replace('/', '_').replace(/\s+/g, '_');
+
 export function CreateTestContent() {
   const router = useRouter();
 
@@ -75,37 +79,32 @@ export function CreateTestContent() {
     );
   };
 
+ 
   const handleStartTest = async () => {
     try {
-      if (!numQuestions || selectedStatus.length === 0) return;
+      if (!numQuestions || selectedTopics.length === 0) return;
 
       const payload = {
         total_questions: Number(numQuestions),
-        test_mode: selectedStatus.map(s => s.toLowerCase()),
+
+        test_mode: selectedStatus
+          .filter(s => s === 'Used' || s === 'Unused')
+          .map(s => s.toLowerCase()),
+
         difficulty: selectedDifficulty[0],
-        topic: selectedTopics.filter(t =>
-          [
-            'Anesthesia_Medicine',
-            'Cancer',
-            'Cleft_Craniofacial',
-            'Cosmetics',
-            'Dentoalveolar',
-            'Implants',
-            'Orthognathic',
-            'Pathology',
-            'Recontraction',
-            'TMJ',
-            'Trauma',
-          ].includes(t),
+
+        // ✅ convert topic names to backend format
+        topic: selectedTopics.map(t =>
+          t.replace('/', '_').replace(/\s+/g, '_'),
         ),
       };
 
-      console.log('✅ START TEST PAYLOAD', payload);
+      console.log('START TEST PAYLOAD', payload);
 
       const res = await startTest(payload).unwrap();
-      router.push(`/dashboard/create-test/${res.data.id}`);
-    } catch (err: any) {
-      console.error('Failed to start test ', err?.data || err);
+      router.push(`/dashboard/user/create-test/${res.data.id}`);
+    } catch (err) {
+      console.error('Failed to start test', err);
     }
   };
 
@@ -127,7 +126,7 @@ export function CreateTestContent() {
           <h3 className="text-xl md:text-2xl text-[#444950] font-bold">
             Question Count
           </h3>
-
+          <p>Set the number of questions for your test</p>
           <Select value={numQuestions} onValueChange={setNumQuestions}>
             <SelectTrigger className="w-full sm:w-[180px] h-[61px] bg-[#f7f7f3] p-4 rounded-[8px] cursor-pointer">
               <SelectValue placeholder="Select number" />
@@ -215,7 +214,11 @@ export function CreateTestContent() {
               return (
                 <div
                   key={topic}
-                  className={`flex items-center gap-2 p-3 rounded-md border cursor-pointer ${isSelected ? 'bg-[#f7f7f3] border-gray-400' : 'hover:bg-gray-50'}`}
+                  className={`flex items-center gap-2 p-3 rounded-md border cursor-pointer ${
+                    isSelected
+                      ? 'bg-[#f7f7f3] border-gray-400'
+                      : 'hover:bg-gray-50'
+                  }`}
                   onClick={() => handleTopicToggle(topic, !isSelected)}
                 >
                   <CustomCheckbox checked={isSelected} />

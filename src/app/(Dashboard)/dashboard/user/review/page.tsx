@@ -1,9 +1,9 @@
 import React from 'react'
 
-export default function ResetBankPage() {
+export default function ReviewPage() {
   return (
     <div>
-      <h2>g</h2>
+      
     </div>
   )
 }
