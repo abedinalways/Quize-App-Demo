@@ -1,172 +1,159 @@
 'use client';
-import { useState } from 'react';
+
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import QuizQuestionView from '@/components/create_test_components/QuizQuestionView';
-import { QuizQuestionData } from '@/types/quiz';
-import { useRouter } from 'next/navigation';
-import { MarkedQuestion } from '@/types/markedQuestion';
-// Mock data
-const mockData: QuizQuestionData = {
-  testProgress: {
-    currentQuestion: 1,
-    totalQuestions: 10,
-    questionID: '214541',
-  },
 
-  quizDetails: {
-    title:
-      'A 32-year-old man undergoes extraction of multiple impacted third molars under IV sedation with midazolam, fentanyl, and propofol. For local anesthesia he receives bilateral inferior alveolar nerve blocks and buccal infiltrations with 2% lidocaine containing 1:100,000 epinephrine. At the end of the case, the surgeon reviews the record and realizes that the total lidocaine dose exceeded the recommended maximum for his weight. The team increases monitoring and watches for early manifestations of local anesthetic systemic toxicity.',
-    question:
-      'Which of the following is the most characteristic early sign of lidocaine toxicity?',
-    options: [
-      { id: 'A', text: 'Bradycardia', percentage: 4.5 },
-      { id: 'B', text: 'Perioral numbness', percentage: 68 },
-      { id: 'C', text: 'Seizure', percentage: 26 },
-      { id: 'D', text: 'Ventricular arrhythmia', percentage: 20 },
-      { id: 'E', text: 'Urticaria', percentage: 17.9 },
-    ],
-    userAnswerId: null,
-    correctAnswerId: 'B',
+import type {
+  MarkedQuestion,
+  QuizDetailsUI,
+  QuizQuestionDataUI,
+  Question,
+} from '@/types/test-session';
 
-    explanation: {
-      image: '/images/dashboard/main_dashboard/answer.png',
+const TEST_SESSION_KEY_PREFIX = 'TEST_SESSION_';
+const MARKED_KEY_PREFIX = 'MARKED_QUESTIONS_';
 
-      main: `
-Dose-related lidocaine systemic toxicity typically begins with central nervous system symptoms, and perioral (circumoral) numbness or tingling is a classic early sign. Other early neurologic manifestations can include metallic taste, tinnitus, and lightheadedness as cortical excitation precedes depression. With rising plasma levels, the patient may progress to seizures, followed by CNS depression and eventually cardiovascular collapse. Cardiovascular signs such as bradycardia or ventricular arrhythmias tend to appear later and at higher toxic concentrations. Recognizing subtle early neurologic symptoms allows prompt cessation of further anesthetic administration and early initiation of treatment if needed.
-      `,
-
-      whyIncorrect: [
-        {
-          option: 'Bradycardia',
-          text: `A later cardiovascular manifestation; early toxicity is dominated by CNS symptoms such as perioral numbness.
-          `,
-        },
-        {
-          option: 'Seizure',
-          text: `
-Seizures are advanced manifestations of toxicity, not the earliest. Perioral 
-numbness precedes seizure activity.
-          `,
-        },
-        {
-          option: 'Ventricular arrhythmia',
-          text: `
-Ventricular arrhythmia is a severe late-stage toxicity finding. Early signs 
-are neurologic, not cardiac.
-          `,
-        },
-        {
-          option: 'Urticaria',
-          text: `
-Urticaria suggests an allergic reaction, not dose-related lidocaine toxicity.
-          `,
-        },
-      ],
-
-      pinningPoint: `
-The earliest hallmark of local anesthetic systemic toxicity is
-usually CNS excitation, especially perioral numbness and tinnitus, not immediate cardiovascular collapse.
-      `,
-
-      memoryTrick: `“Numb lips before numb heart”`,
-
-      references: [
-        'Malamed et al. – Handbook of Local Anesthesia',
-        'Maxifwfacial Surgery, Sid ed. 8c. Desver, 2012',
-        'Ellis E. Moos KF et Aftar A. Ton years of mandibula',
-      ],
-    },
-  },
-};
-const questions: QuizQuestionData['quizDetails'][] = [
-  mockData.quizDetails,
-  mockData.quizDetails,
-  mockData.quizDetails,
-  mockData.quizDetails,
-  mockData.quizDetails,
-  mockData.quizDetails,
-  mockData.quizDetails,
-  mockData.quizDetails,
-  mockData.quizDetails,
-  mockData.quizDetails,
-  mockData.quizDetails,
-  mockData.quizDetails,
-  mockData.quizDetails,
-  mockData.quizDetails,
-  mockData.quizDetails,
-  mockData.quizDetails,
-  mockData.quizDetails,
-  mockData.quizDetails,
- 
-];
-function initializeMarkedQuestions(): MarkedQuestion[] {
-  const saved = localStorage.getItem('MARKED_QUESTIONS');
-  if (!saved) return [];
-
+function safeParseJSON<T>(value: string | null): T | null {
+  if (!value) return null;
   try {
-    const parsed = JSON.parse(saved);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (err) {
-    console.error('Invalid marked questions data', err);
-    return [];
+    return JSON.parse(value) as T;
+  } catch {
+    return null;
   }
+}
+
+function toQuizDetailsUI(q: Question): QuizDetailsUI {
+  return {
+    title: q.question_title,
+    question: q.question_statement,
+    options: q.answer_options.map(o => ({
+      id: o.id,
+      text: o.option_text,
+      percentage: 0,
+    })),
+    userAnswerId: null,
+    correctAnswerId: null,
+    explanation: null,
+  };
 }
 
 export default function CreateTestPage() {
   const router = useRouter();
-  
-  const totalQuestions = questions.length;
+  const params = useParams<{ testId: string }>();
+  const testId = params?.testId;
+
+  const [questions, setQuestions] = useState<QuizDetailsUI[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(1);
-  const [markedQuestions, setMarkedQuestions] = useState<MarkedQuestion[]>(initializeMarkedQuestions);
+  const [markedQuestions, setMarkedQuestions] = useState<MarkededQuestion[]>(
+    [],
+  );
 
+  useEffect(() => {
+    if (!testId) return;
 
-   //  test-complete redirect
-   const handleNext = () => {
-     if (currentQuestion === totalQuestions) {
-       router.push('/dashboard/test-complete');
-     } else {
-       setCurrentQuestion(prev => prev + 1);
-     }
-   };
+    // load test session data stored from /test response
+    const session = safeParseJSON<{
+      id: string;
+      total_questions: number;
+      questions: Question[];
+    }>(sessionStorage.getItem(`${TEST_SESSION_KEY_PREFIX}${testId}`));
 
-  const handlePrevious = () => {
-    if (currentQuestion > 1) {
-      setCurrentQuestion(prev => prev - 1);
+    if (!session?.questions?.length) {
+      // fallback: if user refreshes and sessionStorage is empty
+      // you must implement a GET endpoint to fetch test by id
+      // for now redirect back safely
+      router.push('/dashboard/user/create-test');
+      return;
     }
-  };
- const toggleMark = () => {
-   setMarkedQuestions(prev => {
-     const exists = prev.some(q => q.index === currentQuestion);
 
-     const updated = exists
-       ? prev.filter(q => q.index !== currentQuestion)
-       : [
-           ...prev,
-           {
-             index: currentQuestion,
-             title: questions[currentQuestion - 1].title,
-             question: questions[currentQuestion - 1].question,
-           },
-         ];
+    setQuestions(session.questions.map(toQuizDetailsUI));
 
-     localStorage.setItem('MARKED_QUESTIONS', JSON.stringify(updated));
-     return updated;
-   });
- };
- return (
-  <QuizQuestionView
-    data={{
+    // marked state load
+    const savedMarks = safeParseJSON<MarkedQuestion[]>(
+      localStorage.getItem(`${MARKED_KEY_PREFIX}${testId}`),
+    );
+    setMarkedQuestions(Array.isArray(savedMarks) ? savedMarks : []);
+  }, [router, testId]);
+
+  const totalQuestions = questions.length;
+
+  const data: QuizQuestionDataUI | null = useMemo(() => {
+    if (!totalQuestions) return null;
+    const quizDetails = questions[currentQuestion - 1];
+    return {
       testProgress: {
         currentQuestion,
         totalQuestions,
-        questionID: String(currentQuestion),
+        questionID: String(
+          quizDetails?.title ? currentQuestion : currentQuestion,
+        ),
       },
-      quizDetails: questions[currentQuestion - 1],
-    }}
-    markedQuestions={markedQuestions}
-    onToggleMark={toggleMark}
-    onJumpTo={setCurrentQuestion}
-     onNext={handleNext}
-     onPrevious={handlePrevious}
-  />
-); 
+      quizDetails,
+    };
+  }, [currentQuestion, questions, totalQuestions]);
+
+  const persistMarks = (updated: MarkedQuestion[]) => {
+    if (!testId) return;
+    localStorage.setItem(
+      `${MARKED_KEY_PREFIX}${testId}`,
+      JSON.stringify(updated),
+    );
+  };
+
+  const onJumpTo = (index: number) => {
+    if (index < 1 || index > totalQuestions) return;
+    setCurrentQuestion(index);
+  };
+
+  const onNext = () => {
+    if (currentQuestion === totalQuestions) {
+      router.push('/dashboard/test-complete');
+      return;
+    }
+    setCurrentQuestion(prev => prev + 1);
+  };
+
+  const onPrevious = () => {
+    if (currentQuestion > 1) setCurrentQuestion(prev => prev - 1);
+  };
+
+  const onToggleMarkLocalOnly = () => {
+    // UI mark state (we will call backend mark inside QuizQuestionView)
+    setMarkedQuestions(prev => {
+      const exists = prev.some(q => q.index === currentQuestion);
+
+      const updated = exists
+        ? prev.filter(q => q.index !== currentQuestion)
+        : [
+            ...prev,
+            {
+              index: currentQuestion,
+              title: questions[currentQuestion - 1]?.title ?? '',
+              question: questions[currentQuestion - 1]?.question ?? '',
+            },
+          ];
+
+      persistMarks(updated);
+      return updated;
+    });
+  };
+
+  if (!data) {
+    return null; 
+  }
+
+  return (
+    <QuizQuestionView
+      testId={testId}
+      data={data}
+      markedQuestions={markedQuestions}
+      onToggleMark={onToggleMarkLocalOnly}
+      onJumpTo={onJumpTo}
+      onNext={onNext}
+      onPrevious={onPrevious}
+      setQuestions={setQuestions}
+      currentQuestion={currentQuestion}
+    />
+  );
 }
