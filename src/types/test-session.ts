@@ -81,6 +81,7 @@ export interface QuizExplanationUI {
 }
 
 export interface QuizDetailsUI {
+  id: string;
   title: string;
   question: string;
   options: QuizOptionUI[];

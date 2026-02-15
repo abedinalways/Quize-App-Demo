@@ -13,6 +13,7 @@ import type {
   QuizDetailsUI,
   QuizQuestionDataUI,
 } from '@/types/test-session';
+
 import {
   useAnswerQuestionMutation,
   useLazyGetTestResultQuery,
@@ -28,13 +29,11 @@ interface QuizQuestionViewProps {
   onNext: () => void;
   onPrevious: () => void;
   onJumpTo?: (index: number) => void;
-
-  // for updating current question data after result fetch
   setQuestions: React.Dispatch<React.SetStateAction<QuizDetailsUI[]>>;
   currentQuestion: number;
 }
 
-export const QuizQuestionView: React.FC<QuizQuestionViewProps> = ({
+const QuizQuestionView: React.FC<QuizQuestionViewProps> = ({
   testId,
   data,
   markedQuestions,
@@ -48,54 +47,55 @@ export const QuizQuestionView: React.FC<QuizQuestionViewProps> = ({
   const { testProgress, quizDetails } = data;
   const { totalQuestions, questionID } = testProgress;
 
-  const [selectedAnswerId, setSelectedAnswer] = useState<string | null>(
-    () => quizDetails.userAnswerId ?? null,
-  );
-
-  const [showExplanation, setShowExplanation] = useState(false);
-  const [isQuestionHidden, setIsQuestionHidden] = useState(false);
+  /**
+   * Local UI state (resets automatically because parent uses key={questionID})
+   */
+  const [selectedAnswerId, setSelectedAnswer] = useState<string | null>(null);
+  const [showExplanation, setShowExplanation] = useState<boolean>(false);
+  const [isQuestionHidden, setIsQuestionHidden] = useState<boolean>(false);
+  const [zoomLevel, setZoomLevel] = useState<number>(1);
 
   const questionRef = useRef<HTMLDivElement>(null);
   const explanationRef = useRef<HTMLDivElement>(null);
 
-  const [answerQuestion] = useAnswerQuestionMutation();
+  const [answerQuestion, { isLoading: isAnswering }] =
+    useAnswerQuestionMutation();
   const [toggleMarkApi] = useToggleMarkMutation();
   const [skipQuestionApi] = useSkipQuestionMutation();
   const [getResultTrigger] = useLazyGetTestResultQuery();
 
-  // reset UI when question changes
+  /**
+   * Reset animation state only (no setState here)
+   */
   useEffect(() => {
-    setShowExplanation(false);
-    setIsQuestionHidden(false);
-
     if (questionRef.current && explanationRef.current) {
       gsap.set(questionRef.current, { flex: '1 1 0%', opacity: 1 });
       gsap.set(explanationRef.current, { flex: '1 1 0%' });
     }
-  }, [currentQuestion]);
-
-  // sync selected answer when question or backend data changes
-  useEffect(() => {
-    setSelectedAnswer(quizDetails.userAnswerId ?? null);
-  }, [currentQuestion, quizDetails.userAnswerId]);
+  }, [questionID]);
 
   const progressValue = (currentQuestion / totalQuestions) * 100;
+
   const isMarked = markedQuestions.some(q => q.index === currentQuestion);
 
-  const handleAnswerChange = (value: string) => setSelectedAnswer(value);
+  const handleAnswerChange = (value: string) => {
+    if (showExplanation) return;
+    setSelectedAnswer(value);
+  };
 
+  /**
+   * Submit Answer
+   */
   const handleSubmit = async () => {
-    if (!selectedAnswerId) return;
+    if (!selectedAnswerId || showExplanation || isAnswering) return;
 
-    // 1) submit answer
-    await answerQuestion({
-      test_id: testId,
-      question_id: questionID,
-      answer_option_id: selectedAnswerId,
-    }).unwrap();
-
-    // 2) try fetch result (only if backend supports)
     try {
+      await answerQuestion({
+        test_id: testId,
+        question_id: questionID,
+        answer_option_id: selectedAnswerId,
+      }).unwrap();
+
       const res = await getResultTrigger({
         test_id: testId,
         question_id: questionID,
@@ -117,9 +117,7 @@ export const QuizQuestionView: React.FC<QuizQuestionViewProps> = ({
           options: existing.options.map(o => ({
             ...o,
             percentage:
-              typeof percentages[o.id] === 'number'
-                ? percentages[o.id]
-                : (o.percentage ?? 0),
+              typeof percentages[o.id] === 'number' ? percentages[o.id] : 0,
           })),
         };
 
@@ -127,28 +125,32 @@ export const QuizQuestionView: React.FC<QuizQuestionViewProps> = ({
       });
 
       setShowExplanation(true);
-      setIsQuestionHidden(false);
-    } catch {
-      // If no result endpoint or fails, still show explanation panel = false
-      // because we don't have correct answer/explanation from backend
-      setShowExplanation(false);
+    } catch (error) {
+      console.error('Submit failed:', error);
     }
   };
 
+  /**
+   * Toggle Mark
+   */
   const handleToggleMark = async () => {
-    // update local UI mark (no design change)
-    onToggleMark();
+    try {
+      onToggleMark();
 
-    // sync backend mark state
-    await toggleMarkApi({
-      test_id: testId,
-      question_id: questionID,
-      is_marked: !isMarked,
-    }).unwrap();
+      await toggleMarkApi({
+        test_id: testId,
+        question_id: questionID,
+        is_marked: !isMarked,
+      }).unwrap();
+    } catch (error) {
+      console.error('Mark toggle failed:', error);
+    }
   };
 
+  /**
+   * Next Question
+   */
   const handleNext = async () => {
-    // If user didn't answer, consider it skipped
     if (!selectedAnswerId) {
       try {
         await skipQuestionApi({
@@ -156,9 +158,10 @@ export const QuizQuestionView: React.FC<QuizQuestionViewProps> = ({
           question_id: questionID,
         }).unwrap();
       } catch {
-        // silent fail
+        // ignore skip errors
       }
     }
+
     onNext();
   };
 
@@ -166,6 +169,9 @@ export const QuizQuestionView: React.FC<QuizQuestionViewProps> = ({
     onPrevious();
   };
 
+  /**
+   * Toggle hide/show question animation
+   */
   const handleToggleHide = () => {
     if (!showExplanation) return;
 
@@ -205,19 +211,18 @@ export const QuizQuestionView: React.FC<QuizQuestionViewProps> = ({
     }
   };
 
-  // zoom
-  const [zoomLevel, setZoomLevel] = useState(1);
   const MIN_ZOOM = 0.8;
   const MAX_ZOOM = 1.4;
   const STEP = 0.1;
 
   const handleZoomIn = () => setZoomLevel(z => Math.min(z + STEP, MAX_ZOOM));
+
   const handleZoomOut = () => setZoomLevel(z => Math.max(z - STEP, MIN_ZOOM));
 
   const isUserCorrect =
-    quizDetails.correctAnswerId !== null && // Ensure correctAnswerId is not null
-    selectedAnswerId !== null && // Ensure selectedAnswerId is not null
-    selectedAnswerId === quizDetails.correctAnswerId; // Then compare the values
+    quizDetails.correctAnswerId !== null &&
+    selectedAnswerId !== null &&
+    selectedAnswerId === quizDetails.correctAnswerId;
 
   return (
     <div className="flex flex-col space-y-4 font-[manrope]">
@@ -234,7 +239,7 @@ export const QuizQuestionView: React.FC<QuizQuestionViewProps> = ({
         onZoomOut={handleZoomOut}
       />
 
-      <div className="background rounded-md grid grid-cols-1 md:grid-cols-12 ">
+      <div className="background rounded-md grid grid-cols-1 md:grid-cols-12">
         <QuestionSidebar
           totalQuestions={totalQuestions}
           currentQuestion={currentQuestion}

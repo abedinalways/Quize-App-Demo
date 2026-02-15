@@ -24,12 +24,15 @@ function safeParseJSON<T>(value: string | null): T | null {
 }
 
 function toQuizDetailsUI(q: Question): QuizDetailsUI {
+  const optionsArray = Array.isArray(q.answer_options) ? q.answer_options : [];
+
   return {
-    title: q.question_title,
-    question: q.question_statement,
-    options: q.answer_options.map(o => ({
+    id: q.id,
+    title: q.question_title ?? '',
+    question: q.question_statement ?? '',
+    options: optionsArray.map(o => ({
       id: o.id,
-      text: o.option_text,
+      text: o.option_text ?? '',
       percentage: 0,
     })),
     userAnswerId: null,
@@ -40,54 +43,65 @@ function toQuizDetailsUI(q: Question): QuizDetailsUI {
 
 export default function CreateTestPage() {
   const router = useRouter();
-  const params = useParams<{ testId: string }>();
-  const testId = params?.testId;
+  const params = useParams();
+  const testId = params?.testId as string | undefined;
 
-  const [questions, setQuestions] = useState<QuizDetailsUI[]>([]);
-  const [currentQuestion, setCurrentQuestion] = useState(1);
-  const [markedQuestions, setMarkedQuestions] = useState<MarkededQuestion[]>(
-    [],
-  );
+  /**
+   * 1️⃣ Load session synchronously
+   */
+  const session = useMemo(() => {
+    if (!testId) return null;
 
-  useEffect(() => {
-    if (!testId) return;
-
-    // load test session data stored from /test response
-    const session = safeParseJSON<{
+    return safeParseJSON<{
       id: string;
       total_questions: number;
       questions: Question[];
     }>(sessionStorage.getItem(`${TEST_SESSION_KEY_PREFIX}${testId}`));
+  }, [testId]);
 
-    if (!session?.questions?.length) {
-      // fallback: if user refreshes and sessionStorage is empty
-      // you must implement a GET endpoint to fetch test by id
-      // for now redirect back safely
-      router.push('/dashboard/user/create-test');
-      return;
-    }
+  /**
+   * 2️⃣ Hooks must always run
+   */
+  const [currentQuestion, setCurrentQuestion] = useState<number>(1);
 
-    setQuestions(session.questions.map(toQuizDetailsUI));
+  const [markedQuestions, setMarkedQuestions] = useState<MarkedQuestion[]>(
+    () =>
+      safeParseJSON<MarkedQuestion[]>(
+        localStorage.getItem(`${MARKED_KEY_PREFIX}${testId}`),
+      ) ?? [],
+  );
 
-    // marked state load
-    const savedMarks = safeParseJSON<MarkedQuestion[]>(
-      localStorage.getItem(`${MARKED_KEY_PREFIX}${testId}`),
-    );
-    setMarkedQuestions(Array.isArray(savedMarks) ? savedMarks : []);
-  }, [router, testId]);
+  /**
+   * 3️⃣ Derive questions safely
+   */
+  const questions: QuizDetailsUI[] = useMemo(() => {
+    if (!session?.questions) return [];
+    return session.questions.map(toQuizDetailsUI);
+  }, [session]);
 
   const totalQuestions = questions.length;
 
+  
+  useEffect(() => {
+    if (!session || totalQuestions === 0) {
+      router.replace('/dashboard/user/create-test/');
+    }
+  }, [session, totalQuestions, router]);
+
+  /**
+   * 5️⃣ Prepare quiz data
+   */
   const data: QuizQuestionDataUI | null = useMemo(() => {
-    if (!totalQuestions) return null;
+    if (!questions.length) return null;
+
     const quizDetails = questions[currentQuestion - 1];
+    if (!quizDetails) return null;
+
     return {
       testProgress: {
         currentQuestion,
         totalQuestions,
-        questionID: String(
-          quizDetails?.title ? currentQuestion : currentQuestion,
-        ),
+        questionID: quizDetails.id,
       },
       quizDetails,
     };
@@ -95,6 +109,7 @@ export default function CreateTestPage() {
 
   const persistMarks = (updated: MarkedQuestion[]) => {
     if (!testId) return;
+
     localStorage.setItem(
       `${MARKED_KEY_PREFIX}${testId}`,
       JSON.stringify(updated),
@@ -107,19 +122,21 @@ export default function CreateTestPage() {
   };
 
   const onNext = () => {
-    if (currentQuestion === totalQuestions) {
-      router.push('/dashboard/test-complete');
+    if (currentQuestion >= totalQuestions) {
+      router.push(`/dashboard/test-complete/${testId}`);
       return;
     }
+
     setCurrentQuestion(prev => prev + 1);
   };
 
   const onPrevious = () => {
-    if (currentQuestion > 1) setCurrentQuestion(prev => prev - 1);
+    if (currentQuestion > 1) {
+      setCurrentQuestion(prev => prev - 1);
+    }
   };
 
   const onToggleMarkLocalOnly = () => {
-    // UI mark state (we will call backend mark inside QuizQuestionView)
     setMarkedQuestions(prev => {
       const exists = prev.some(q => q.index === currentQuestion);
 
@@ -129,6 +146,7 @@ export default function CreateTestPage() {
             ...prev,
             {
               index: currentQuestion,
+              questionId: questions[currentQuestion - 1]?.id ?? '',
               title: questions[currentQuestion - 1]?.title ?? '',
               question: questions[currentQuestion - 1]?.question ?? '',
             },
@@ -139,21 +157,20 @@ export default function CreateTestPage() {
     });
   };
 
-  if (!data) {
-    return null; 
-  }
+  if (!data) return null;
 
   return (
     <QuizQuestionView
-      testId={testId}
+      key={data.testProgress.questionID}
+      testId={testId!}
       data={data}
       markedQuestions={markedQuestions}
       onToggleMark={onToggleMarkLocalOnly}
       onJumpTo={onJumpTo}
       onNext={onNext}
       onPrevious={onPrevious}
-      setQuestions={setQuestions}
       currentQuestion={currentQuestion}
+      setQuestions={() => {}}
     />
   );
 }

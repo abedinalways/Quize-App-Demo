@@ -32,18 +32,16 @@ const TOPICS: string[] = [
 
 const DIFFICULTY_LEVELS = ['Intern', 'Senior', 'Boards'] as const;
 
-
-const normalizeTopic = (topic: string) =>
-  topic.replace('/', '_').replace(/\s+/g, '_');
+type DifficultyLevel = (typeof DIFFICULTY_LEVELS)[number];
 
 export function CreateTestContent() {
   const router = useRouter();
 
   const [selectedTopics, setSelectedTopics] = useState<string[]>(TOPICS);
   const [testMode, setTestMode] = useState<'Timed' | 'Untimed'>('Untimed');
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string[]>([
-    'Intern',
-  ]);
+  const [selectedDifficulty, setSelectedDifficulty] =
+    useState<DifficultyLevel>('Intern');
+
   const [selectedStatus, setSelectedStatus] = useState<string[]>(['Used']);
   const [numQuestions, setNumQuestions] = useState<string>('');
 
@@ -61,25 +59,10 @@ export function CreateTestContent() {
     );
   };
 
-  const handleDifficultyToggle = (level: string, checked: boolean) => {
-    setSelectedDifficulty(prev =>
-      checked ? [...prev, level] : prev.filter(d => d !== level),
-    );
+  const handleDifficultySelect = (level: DifficultyLevel) => {
+    setSelectedDifficulty(level);
   };
 
-  const toggleAllTopics = () => {
-    setSelectedTopics(selectedTopics.length === TOPICS.length ? [] : TOPICS);
-  };
-
-  const toggleAllDifficulty = () => {
-    setSelectedDifficulty(
-      selectedDifficulty.length === DIFFICULTY_LEVELS.length
-        ? []
-        : [...DIFFICULTY_LEVELS],
-    );
-  };
-
- 
   const handleStartTest = async () => {
     try {
       if (!numQuestions || selectedTopics.length === 0) return;
@@ -91,20 +74,29 @@ export function CreateTestContent() {
           .filter(s => s === 'Used' || s === 'Unused')
           .map(s => s.toLowerCase()),
 
-        difficulty: selectedDifficulty[0],
+        difficulty: selectedDifficulty,
 
-        // ✅ convert topic names to backend format
         topic: selectedTopics.map(t =>
           t.replace('/', '_').replace(/\s+/g, '_'),
         ),
       };
 
-      console.log('START TEST PAYLOAD', payload);
-
       const res = await startTest(payload).unwrap();
+
+      const testSession = {
+        id: res.data.id,
+        total_questions: res.data.total_questions,
+        questions: res.data.questions,
+      };
+
+      sessionStorage.setItem(
+        `TEST_SESSION_${res.data.id}`,
+        JSON.stringify(testSession),
+      );
+
       router.push(`/dashboard/user/create-test/${res.data.id}`);
-    } catch (err) {
-      console.error('Failed to start test', err);
+    } catch (error) {
+      console.error('Failed to start test', error);
     }
   };
 
@@ -187,12 +179,13 @@ export function CreateTestContent() {
 
           <div className="flex flex-wrap gap-4">
             {DIFFICULTY_LEVELS.map(level => {
-              const isSelected = selectedDifficulty.includes(level);
+              const isSelected = selectedDifficulty === level;
+
               return (
                 <div
                   key={level}
                   className="flex items-center gap-2 bg-[#f8f8f4] px-4 py-2 rounded-[8px] cursor-pointer"
-                  onClick={() => handleDifficultyToggle(level, !isSelected)}
+                  onClick={() => handleDifficultySelect(level)}
                 >
                   <CustomCheckbox checked={isSelected} />
                   <span>{level}</span>
@@ -211,6 +204,7 @@ export function CreateTestContent() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {TOPICS.map(topic => {
               const isSelected = selectedTopics.includes(topic);
+
               return (
                 <div
                   key={topic}
