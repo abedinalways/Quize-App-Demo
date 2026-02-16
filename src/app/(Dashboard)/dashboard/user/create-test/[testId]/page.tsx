@@ -28,11 +28,11 @@ function toQuizDetailsUI(q: Question): QuizDetailsUI {
 
   return {
     id: q.id,
-    title: q.question_title ?? '',
-    question: q.question_statement ?? '',
-    options: optionsArray.map(o => ({
+    question_title: q.question_title ?? '',
+    question_steam: q.question_statement ?? '',
+    answerOptions: optionsArray.map(o => ({
       id: o.id,
-      text: o.option_text ?? '',
+      option_text: o.option_text ?? '',
       percentage: 0,
     })),
     userAnswerId: null,
@@ -46,9 +46,7 @@ export default function CreateTestPage() {
   const params = useParams();
   const testId = params?.testId as string | undefined;
 
-  /**
-   * 1️⃣ Load session synchronously
-   */
+  
   const session = useMemo(() => {
     if (!testId) return null;
 
@@ -123,7 +121,7 @@ export default function CreateTestPage() {
 
   const onNext = () => {
     if (currentQuestion >= totalQuestions) {
-      router.push(`/dashboard/test-complete/${testId}`);
+      router.push(`/dashboard/user/test-complete/${testId}`);
       return;
     }
 
@@ -147,8 +145,8 @@ export default function CreateTestPage() {
             {
               index: currentQuestion,
               questionId: questions[currentQuestion - 1]?.id ?? '',
-              title: questions[currentQuestion - 1]?.title ?? '',
-              question: questions[currentQuestion - 1]?.question ?? '',
+              title: questions[currentQuestion - 1]?.question_title ?? '',
+              question: questions[currentQuestion - 1]?.question_steam ?? '',
             },
           ];
 

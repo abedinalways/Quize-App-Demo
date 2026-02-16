@@ -67,7 +67,7 @@ export interface TestResultResponse {
 
 export interface QuizOptionUI {
   id: string;
-  text: string;
+  option_text: string;
   percentage?: number;
 }
 
@@ -82,9 +82,9 @@ export interface QuizExplanationUI {
 
 export interface QuizDetailsUI {
   id: string;
-  title: string;
-  question: string;
-  options: QuizOptionUI[];
+  question_title: string;
+  question_steam: string;
+  answerOptions: QuizOptionUI[];
   userAnswerId: string | null;
   correctAnswerId: string | null;
   explanation: QuizExplanationUI | null;

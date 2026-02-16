@@ -47,9 +47,7 @@ const QuizQuestionView: React.FC<QuizQuestionViewProps> = ({
   const { testProgress, quizDetails } = data;
   const { totalQuestions, questionID } = testProgress;
 
-  /**
-   * Local UI state (resets automatically because parent uses key={questionID})
-   */
+  
   const [selectedAnswerId, setSelectedAnswer] = useState<string | null>(null);
   const [showExplanation, setShowExplanation] = useState<boolean>(false);
   const [isQuestionHidden, setIsQuestionHidden] = useState<boolean>(false);
@@ -64,9 +62,7 @@ const QuizQuestionView: React.FC<QuizQuestionViewProps> = ({
   const [skipQuestionApi] = useSkipQuestionMutation();
   const [getResultTrigger] = useLazyGetTestResultQuery();
 
-  /**
-   * Reset animation state only (no setState here)
-   */
+  
   useEffect(() => {
     if (questionRef.current && explanationRef.current) {
       gsap.set(questionRef.current, { flex: '1 1 0%', opacity: 1 });
@@ -114,7 +110,7 @@ const QuizQuestionView: React.FC<QuizQuestionViewProps> = ({
           userAnswerId: res.data.user_answer_id,
           correctAnswerId: res.data.correct_answer_id,
           explanation: res.data.explanation,
-          options: existing.options.map(o => ({
+          answerOptions: existing.answerOptions.map(o => ({
             ...o,
             percentage:
               typeof percentages[o.id] === 'number' ? percentages[o.id] : 0,

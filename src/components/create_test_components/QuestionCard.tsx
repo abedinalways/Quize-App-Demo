@@ -29,7 +29,9 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
   onSubmit,
   onToggleHide,
   isQuestionHidden,
+  
 }) => {
+  console.log(quizDetails);
   return (
     <div className="w-full bg-[#f9f9f5] md:my-8 md:p-[32px] rounded-[16px]">
       {showExplanation && (
@@ -44,7 +46,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
 
       <CardHeader>
         <p className="text-sm md:text-[20px] text-gray-700 leading-relaxed font-normal">
-          {quizDetails.title} {quizDetails.question}
+          {quizDetails?.question_title} {quizDetails?.question_steam}
         </p>
       </CardHeader>
 
@@ -55,7 +57,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
           onValueChange={onAnswerChange}
           className="space-y-4"
         >
-          {quizDetails.options.map(option => {
+          {quizDetails.answerOptions.map(option => {
             const isCorrect = option.id === quizDetails.correctAnswerId;
             const isSelected = option.id === selectedAnswerId;
             const isWrongSelected = showExplanation && isSelected && !isCorrect;
@@ -74,7 +76,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
               >
                 <div className="flex items-center gap-3">
                   <RadioGroupItem
-                    varient='default'
+                    varient="default"
                     value={option.id}
                     id={`option-${option.id}`}
                     disabled={showExplanation}
@@ -91,7 +93,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                     )}
                   >
                     <span className="font-bold mr-2">{option.id}.</span>
-                    {option.text}
+                    {option.option_text}
                   </Label>
                 </div>
 
