@@ -2,8 +2,8 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-// import { useAppSelector } from '@/app/redux/hook';
-import { useMeQuery } from '@/app/redux/api/authApi'; // Ensure you're using the correct query here
+;
+import { useMeQuery } from '@/app/redux/api/authApi'; 
 import AuthProvider from '@/app/AuthProvider';
 
 export default function DashboardLayout({
@@ -13,9 +13,8 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const { data: user, error } = useMeQuery(); 
-
-  console.log('User from useMeQuery:', user);
-
+  
+    
   useEffect(() => {
     if (error) {
       console.log('Error fetching user:', error);
@@ -23,7 +22,7 @@ export default function DashboardLayout({
 
     if (!user) return;
 
-    if (user.role === 'admin') {
+    if (user?.type === 'admin') {
       router.replace('/dashboard/admin');
     } else {
       router.replace('/dashboard/user');

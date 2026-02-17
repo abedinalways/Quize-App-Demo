@@ -21,7 +21,7 @@ export default function Sidebar({
   mobile = false,
 }: SidebarProps) {
   const { data: user, isLoading } = useMeQuery();
-  console.log({ user });
+  console.log({ user});
 
   const pathname = usePathname();
 
@@ -36,7 +36,7 @@ export default function Sidebar({
 
   if (isLoading || !user) return null;
 
-  const role = user?.role;
+  const role = user?.type;
   
   const menu: MenuItem[] = role === 'admin' ? adminMenu : userMenu;
 

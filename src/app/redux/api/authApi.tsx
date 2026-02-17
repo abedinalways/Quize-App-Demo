@@ -39,7 +39,7 @@ export const authApi = baseApi.injectEndpoints({
       query: () => ({
         url: '/profile',
         method: 'GET',
-        credentials: 'include',
+        // credentials: 'include',
       }),
       transformResponse: (res: { data: AuthUser }) => res.data,
     }),

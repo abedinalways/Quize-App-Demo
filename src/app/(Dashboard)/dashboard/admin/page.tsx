@@ -12,7 +12,7 @@ export default function AdminDashboardPage() {
   const { data: activities = [] } = useGetRecentActivitiesQuery();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-[manrope]">
       <h1 className="text-4xl font-bold">Admin Dashboard</h1>
 
       <StatsCard />
@@ -22,7 +22,7 @@ export default function AdminDashboardPage() {
           <UserVerification
             users={users}
             onAction={(user, action) => {
-              // TODO: Implement the approve/reject logic here
+              
               console.log(`User ${user.id} ${action}`);
             }}
           />

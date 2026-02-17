@@ -11,6 +11,7 @@ export interface AuthUser {
   avatar: string;
   followers: string;
   followings: string;
+  type: 'admin' | 'user';
 }
 export interface AuthorizationResponse {
   success: boolean;

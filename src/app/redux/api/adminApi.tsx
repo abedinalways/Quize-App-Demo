@@ -12,5 +12,4 @@ export const adminApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useGetPendingUsersQuery, useGetRecentActivitiesQuery } =
-  adminApi;
+export const { useGetPendingUsersQuery, useGetRecentActivitiesQuery } =adminApi;

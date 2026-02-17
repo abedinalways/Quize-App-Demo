@@ -3,10 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ReactNode } from 'react';
-
 import Topbar from '../topbar/Topbar';
 import { useAppSelector } from '@/app/redux/hook';
-
 import Sidebar from '../sidebar/Sidebar';
 
 interface UserLayoutProps {
@@ -16,7 +14,7 @@ interface UserLayoutProps {
 export default function UserLayout({ children }: UserLayoutProps) {
   const router = useRouter();
   const role = useAppSelector(s => s.auth.user?.role);
-  console.log(role, 'kon')
+  // console.log(role, 'kon')
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
