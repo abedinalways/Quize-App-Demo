@@ -24,13 +24,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen flex">
-      <aside className="hidden lg:block w-55 bg-yellow-600">
+      <aside className="hidden lg:block w-55 fixed inset-y-0 left-0 ">
         <Sidebar />
       </aside>
 
       <Sidebar mobile open={open} setOpen={setOpen} />
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex flex-col flex-1 lg:ml-55 w-full">
         <Topbar onMenuClick={() => setOpen(true)} />
         <main className="p-6">{children}</main>
       </div>

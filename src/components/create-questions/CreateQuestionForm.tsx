@@ -11,6 +11,7 @@ import { RichTextEditor } from './RichTextEditor';
 import { toast } from 'sonner';
 import { Label } from '../ui/label';
 import { InputGroup, InputGroupInput } from '../ui/input-group';
+import { useCreateQuestionMutation } from '@/app/redux/api/createQuestionsApi';
 
 const TOPICS = [
   'Anesthesia/Medicine',
@@ -44,62 +45,94 @@ export default function CreateQuestionForm() {
 
   const { fields, append } = useFieldArray({ control, name: 'answers' });
   const [editorKey, setEditorKey] = React.useState(0);
+  const [createQuestion, { isLoading }] = useCreateQuestionMutation();
 
   // File attachment state
   const [attachedFile, setAttachedFile] = React.useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleAddMoreQuestionSameScenario = () => {
-    const currentDifficulty = watch('difficulty');
-    const currentTopic = watch('topic');
+  // const handleAddMoreQuestionSameScenario = () => {
+  //   const currentDifficulty = watch('difficulty');
+  //   const currentTopic = watch('topic');
 
-    reset({
-      difficulty: currentDifficulty,
-      topic: currentTopic,
-      questionStem: '',
-      questionTitle: '',
-      explanation: '',
-      keyPoints: '',
-      keepingPoint: '',
-      memoryTrick: '',
-      references: '',
-      answers: [
-        { id: '1', text: '', isCorrect: false },
-        { id: '2', text: '', isCorrect: true },
-      ],
-    });
+  //   reset({
+  //     difficulty: currentDifficulty,
+  //     topic: currentTopic,
+  //     questionStem: '',
+  //     questionTitle: '',
+  //     explanation: '',
+  //     keyPoints: '',
+  //     keepingPoint: '',
+  //     memoryTrick: '',
+  //     references: '',
+  //     answers: [
+  //       { id: '1', text: '', isCorrect: false },
+  //       { id: '2', text: '', isCorrect: true },
+  //     ],
+  //   });
 
-    setEditorKey(prev => prev + 1);
-    setAttachedFile(null);
+  //   setEditorKey(prev => prev + 1);
+  //   setAttachedFile(null);
 
-    toast.success('New question added for the same scenario');
-  };
+  //   toast.success('New question added for the same scenario');
+  // };
 
-  const onSubmit = (data: QuestionFormValues) => {
-    console.log('Form Data Submitted:', data);
-    if (attachedFile) {
-      console.log('Attached File:', attachedFile);
+  const onSubmit = async (data: QuestionFormValues) => {
+    try {
+      const formData = new FormData();
+
+      formData.append('question_title', data.questionTitle || '');
+      formData.append('question_steam', data.questionStem || '');
+      formData.append('explanation', data.explanation || '');
+      formData.append('why_incorrect', data.keyPoints || '');
+      formData.append('pimping_point', data.keepingPoint || '');
+      formData.append('memory_trick', data.memoryTrick || '');
+      formData.append('reference', data.references || '');
+      formData.append('difficulty', data.difficulty);
+      formData.append('topic', data.topic);
+
+      formData.append(
+        'answerOptions',
+        JSON.stringify(
+          data.answers.map(a => ({
+            option_text: a.text,
+            is_correct: a.isCorrect,
+          })),
+        ),
+      );
+
+      if (attachedFile) {
+        formData.append('explanation_image', attachedFile);
+      }
+
+      await createQuestion(formData).unwrap();
+
+      toast.success('Question created successfully!');
+
+      reset({
+        difficulty: 'Intern',
+        topic: 'Anesthesia/Medicine',
+        questionStem: '',
+        questionTitle: '',
+        explanation: '',
+        keyPoints: '',
+        keepingPoint: '',
+        memoryTrick: '',
+        references: '',
+        answers: [
+          { id: '1', text: '', isCorrect: false },
+          { id: '2', text: '', isCorrect: true },
+        ],
+      });
+
+      setEditorKey(prev => prev + 1);
+      setAttachedFile(null);
+    } catch (error: unknown) {
+      console.error(error);
+      toast.error('Failed to create question');
     }
-    toast.success('Question created successfully!');
-
-    reset({
-      difficulty: 'Intern',
-      topic: 'Anatomy/Medicine',
-      questionStem: '',
-      questionTitle: '',
-      explanation: '',
-      keyPoints: '',
-      keepingPoint: '',
-      memoryTrick: '',
-      references: '',
-      answers: [
-        { id: '1', text: '', isCorrect: false },
-        { id: '2', text: '', isCorrect: true },
-      ],
-    });
-    setEditorKey(prev => prev + 1);
-    setAttachedFile(null);
   };
+
 
   const handleAttachFileClick = () => {
     fileInputRef.current?.click();

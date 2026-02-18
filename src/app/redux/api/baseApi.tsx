@@ -5,7 +5,7 @@ export const baseApi = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
     baseUrl: process.env.NEXT_PUBLIC_API_ENDPOINT,
-    // credentials: 'include',
+
     prepareHeaders: (headers, { getState }) => {
       const token = (getState() as { auth: AuthState }).auth.auth.token;
 
@@ -15,6 +15,14 @@ export const baseApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ['Auth', 'profileStat', 'DiscoverProfiles','profileData', 'Profile'],
+  tagTypes: [
+    'Auth',
+    'profileStat',
+    'DiscoverProfiles',
+    'profileData',
+    'Profile',
+    'UserStatus',
+    'Questions',
+  ],
   endpoints: () => ({}),
 });
