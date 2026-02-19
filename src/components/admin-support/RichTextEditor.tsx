@@ -111,7 +111,7 @@ export function RichTextEditor({ value = '', onChange }: RichTextEditorProps) {
 
   if (!editor) return null;
 
-  const headingLevels = [1, 2, 3, 4, 5] as const; // ✅ strict literal types
+  const headingLevels = [1, 2, 3, 4, 5] as const; 
 
   return (
     <div className="rounded-xl overflow-hidden border border-gray-100 shadow-sm">

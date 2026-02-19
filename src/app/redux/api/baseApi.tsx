@@ -23,6 +23,8 @@ export const baseApi = createApi({
     'Profile',
     'UserStatus',
     'Questions',
+    'allQuestions',
+    'help',
   ],
   endpoints: () => ({}),
 });
