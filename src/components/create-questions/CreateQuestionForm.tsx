@@ -14,9 +14,9 @@ import { InputGroup, InputGroupInput } from '../ui/input-group';
 import { useCreateQuestionMutation } from '@/app/redux/api/createQuestionsApi';
 
 const TOPICS = [
-  'Anesthesia/Medicine',
+  'Anesthesia_Medicine',
   'Cancer',
-  'Cleft/Craniofacial',
+  'Cleft_Craniofacial',
   'Cosmetics',
   'Dentoalveolar',
   'Implants',
@@ -33,7 +33,7 @@ export default function CreateQuestionForm() {
     useForm<QuestionFormValues>({
       defaultValues: {
         difficulty: 'Intern',
-        topic: 'Anatomy & Medicine',
+        topic: 'Anesthesia_Medicine',
         hasMemoryTrick: false,
         memoryTrick:'',
         answers: [
@@ -77,61 +77,46 @@ export default function CreateQuestionForm() {
   //   toast.success('New question added for the same scenario');
   // };
 
-  const onSubmit = async (data: QuestionFormValues) => {
-    try {
-      const formData = new FormData();
+ const onSubmit = async (data: QuestionFormValues) => {
+   try {
+     const formData = new FormData();
 
-      formData.append('question_title', data.questionTitle || '');
-      formData.append('question_steam', data.questionStem || '');
-      formData.append('explanation', data.explanation || '');
-      formData.append('why_incorrect', data.keyPoints || '');
-      formData.append('pimping_point', data.keepingPoint || '');
-      formData.append('memory_trick', data.memoryTrick || '');
-      formData.append('reference', data.references || '');
-      formData.append('difficulty', data.difficulty);
-      formData.append('topic', data.topic);
+     formData.append('question_title', data.questionTitle);
+     formData.append('question_steam', data.questionStem);
+     formData.append('explanation', data.explanation || '');
+     formData.append('why_incorrect', data.keyPoints || '');
+     formData.append('pimping_point', data.keepingPoint || '');
+     formData.append('memory_trick', data.memoryTrick || '');
+     formData.append('reference', data.references || '');
+     formData.append('difficulty', data.difficulty);
 
-      formData.append(
-        'answerOptions',
-        JSON.stringify(
-          data.answers.map(a => ({
-            option_text: a.text,
-            is_correct: a.isCorrect,
-          })),
-        ),
-      );
+     formData.append('topic', JSON.stringify([data.topic]));
 
-      if (attachedFile) {
-        formData.append('explanation_image', attachedFile);
-      }
+     formData.append(
+       'answerOptions',
+       JSON.stringify(
+         data.answers.map(a => ({
+           option_text: a.text,
+           is_correct: a.isCorrect,
+         })),
+       ),
+     );
 
-      await createQuestion(formData).unwrap();
+     if (attachedFile) {
+       formData.append('explanation_image', attachedFile);
+     }
 
-      toast.success('Question created successfully!');
-
-      reset({
-        difficulty: 'Intern',
-        topic: 'Anesthesia/Medicine',
-        questionStem: '',
-        questionTitle: '',
-        explanation: '',
-        keyPoints: '',
-        keepingPoint: '',
-        memoryTrick: '',
-        references: '',
-        answers: [
-          { id: '1', text: '', isCorrect: false },
-          { id: '2', text: '', isCorrect: true },
-        ],
-      });
-
-      setEditorKey(prev => prev + 1);
-      setAttachedFile(null);
-    } catch (error: unknown) {
-      console.error(error);
-      toast.error('Failed to create question');
-    }
-  };
+     await createQuestion(formData).unwrap();
+     console.log(formData, 'jaskfds');
+     toast.success('Question created successfully!');
+     reset();
+     setEditorKey(prev => prev + 1);
+     setAttachedFile(null);
+   } catch (error: any) {
+     console.log(error?.data);
+     toast.error(error?.data?.message || 'Failed to create question');
+   }
+ };
 
 
   const handleAttachFileClick = () => {
@@ -197,6 +182,14 @@ export default function CreateQuestionForm() {
               className="border-none"
             />
           </InputGroup>
+        </div>
+        {/* Question Title */}
+        <div className="space-y-2">
+          <Label className="text-md font-bold">Question Title</Label>
+          <Input
+            {...register('questionTitle', { required: true })}
+            placeholder="Enter question title"
+          />
         </div>
 
         {/* Question Stem */}

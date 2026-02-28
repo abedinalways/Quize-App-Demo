@@ -13,7 +13,7 @@ export const createQuestionsApi = baseApi.injectEndpoints({
         method: 'POST',
         body: formData,
       }),
-      invalidatesTags: ['Questions'],
+      invalidatesTags: ['allQuestions'],
     }),
   }),
 });

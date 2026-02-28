@@ -11,11 +11,11 @@ async function handler(
 
   const headers = new Headers();
 
-  // ✅ forward cookies
+
   const cookie = req.headers.get('cookie');
   if (cookie) headers.set('cookie', cookie);
 
-  // ✅ READ token from cookie & set Authorization header
+
   const tokenCookie = req.cookies.get('token')?.value;
   if (tokenCookie) {
     headers.set('authorization', `Bearer ${tokenCookie}`);
@@ -34,7 +34,7 @@ async function handler(
   const data = await res.arrayBuffer();
   const response = new NextResponse(data, { status: res.status });
 
-  // forward set-cookie back to browser
+
   const setCookie = res.headers.get('set-cookie');
   if (setCookie) response.headers.set('set-cookie', setCookie);
 

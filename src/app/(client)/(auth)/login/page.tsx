@@ -6,44 +6,41 @@ import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { useLoginMutation } from '@/app/redux/api/authApi';
+import { useAppDispatch } from '@/app/redux/hook';
+import { setAuth } from '@/app/redux/authSlice';
 
 export default function LoginPage() {
-
   const [error, setError] = useState('');
-
   const [login, { isLoading }] = useLoginMutation();
   const router = useRouter();
+  const dispatch = useAppDispatch();
+
   const handleLogin = async (data: { email: string; password: string }) => {
     setError('');
 
     try {
-      
-      await login(data).unwrap();
-     
-      const res = await fetch('http://192.168.7.42:4004/api/profile', {
-        credentials: 'include',
-      });
-
-      const user = await res.json();
-      console.log(user, 'kdskkssssssss')
+      const result = await login(data).unwrap();
 
       toast.success('Login successful');
 
-      if (user.role === 'admin') {
+     
+      dispatch(
+        setAuth({
+          token: result.authorization.access_token,
+          role: result.type, 
+        }),
+      );
+
+      
+      if (result.type === 'admin') {
         router.replace('/dashboard/admin');
       } else {
         router.replace('/dashboard/user');
       }
-
-  
-  }
-      
-
-    catch (err) {
+    } catch (err) {
       const error = err as { data?: { message?: string } };
       const message =
-        error?.data?.message ||
-        'Invalid email or password. Please try again.';
+        error?.data?.message || 'Invalid email or password. Please try again.';
 
       setError(message);
       toast.error('Login failed', { description: message });
@@ -70,9 +67,7 @@ export default function LoginPage() {
       </div>
 
       {error && (
-        <p className="mb-4 text-sm text-red-500 font-medium z-10">
-          {error}
-        </p>
+        <p className="mb-4 text-sm text-red-500 font-medium z-10">{error}</p>
       )}
 
       <LoginForm onLogin={handleLogin} isLoading={isLoading} />

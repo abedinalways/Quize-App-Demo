@@ -22,7 +22,7 @@ export const baseApi = createApi({
     'profileData',
     'Profile',
     'UserStatus',
-    'Questions',
+    
     'allQuestions',
     'help',
   ],

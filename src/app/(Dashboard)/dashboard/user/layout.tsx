@@ -12,16 +12,11 @@ interface UserLayoutProps {
 }
 
 export default function UserLayout({ children }: UserLayoutProps) {
-  const router = useRouter();
-  const role = useAppSelector(s => s.auth.user?.role);
+
   // console.log(role, 'kon')
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    if (role && role !== 'user') {
-      router.replace('/login');
-    }
-  }, [role]);
+ 
 
 
   return (

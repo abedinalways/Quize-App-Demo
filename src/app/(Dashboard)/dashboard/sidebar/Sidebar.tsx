@@ -1,13 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { adminMenu, userMenu, MenuItem } from './sidebarItems';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
 import OmsLogo from '@/components/reusable/icons/OmsLogo';
-import { useMeQuery } from '@/app/redux/api/authApi';
+import Cookies from 'js-cookie';
 
 interface SidebarProps {
   open?: boolean;
@@ -20,10 +20,12 @@ export default function Sidebar({
   setOpen,
   mobile = false,
 }: SidebarProps) {
-  const { data: user, isLoading } = useMeQuery();
-  console.log({ user});
-
   const pathname = usePathname();
+  const router = useRouter();
+
+  // ✅ Get role from cookie (NO API CALL)
+  const role = Cookies.get('role');
+  const menu: MenuItem[] = role === 'admin' ? adminMenu : userMenu;
 
   useEffect(() => {
     if (mobile && open) document.body.style.overflow = 'hidden';
@@ -33,12 +35,6 @@ export default function Sidebar({
       document.body.style.overflow = 'unset';
     };
   }, [mobile, open]);
-
-  if (isLoading || !user) return null;
-
-  const role = user?.type;
-  
-  const menu: MenuItem[] = role === 'admin' ? adminMenu : userMenu;
 
   const normalizePath = (path: string) => path.replace(/\/+$/, '');
 
@@ -54,27 +50,48 @@ export default function Sidebar({
     return currentPath.startsWith(targetPath);
   };
 
-  const renderMenuItem = (item: MenuItem) => (
-    <Link
-      key={item.href}
-      href={item.href}
-      onClick={() => mobile && setOpen?.(false)}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-all
-        ${
-          isActive(item.href)
-            ? 'bg-[#B79E6B] text-white font-semibold'
-            : 'hover:bg-[#B79E6B] hover:text-white'
-        }`}
-    >
-      <Image src={item.icon} width={18} height={18} alt={item.title} />
-      <span className="text-sm">{item.title}</span>
-    </Link>
-  );
+  const handleLogout = () => {
+    Cookies.remove('token');
+    Cookies.remove('role');
+    router.replace('/login');
+  };
 
-  /*DESKTOP */
+  const renderMenuItem = (item: MenuItem) => {
+    if (item.title === 'Logout') {
+      return (
+        <button
+          key={item.title}
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all hover:bg-red-500 hover:text-white w-full text-left"
+        >
+          <Image src={item.icon} width={18} height={18} alt={item.title} />
+          <span className="text-sm">{item.title}</span>
+        </button>
+      );
+    }
+
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        onClick={() => mobile && setOpen?.(false)}
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-all
+          ${
+            isActive(item.href)
+              ? 'bg-[#B79E6B] text-white font-semibold'
+              : 'hover:bg-[#B79E6B] hover:text-white'
+          }`}
+      >
+        <Image src={item.icon} width={18} height={18} alt={item.title} />
+        <span className="text-sm">{item.title}</span>
+      </Link>
+    );
+  };
+
+  /* DESKTOP */
   if (!mobile) {
     return (
-      <aside className="h-screen! w-55 background border-r flex flex-col text-white font-[manrope] overflow-y-auto">
+      <aside className="w-55 background border-r flex flex-col text-white font-[manrope] overflow-y-auto min-h-screen">
         <div className="p-4">
           <Link href="/">
             <div className="flex items-center gap-2 mb-6">
@@ -87,18 +104,16 @@ export default function Sidebar({
               <h1 className="relative font-bold text-lg sm:text-xl lg:text-3xl text-white font-[manrope] mb-4">
                 <div className="flex items-center justify-center gap-1">
                   Table
-                  <span>
-                    <OmsLogo />
-                  </span>
+                  <OmsLogo />
                 </div>
-                <span className="absolute top-6 ">Rounds</span>
+                <span className="absolute top-6">Rounds</span>
               </h1>
             </div>
           </Link>
 
           <nav className="flex flex-col gap-1">
             {menu.map(item => (
-              <div key={item.href}>
+              <div key={item.href || item.title}>
                 {item.section && (
                   <p className="mt-4 mb-1 text-xs uppercase text-gray-300 font-semibold">
                     {item.section}
@@ -113,10 +128,9 @@ export default function Sidebar({
     );
   }
 
-  /* 📱 MOBILE */
+  /* MOBILE */
   return (
     <>
-      {/* Overlay */}
       {open && (
         <div
           className="fixed inset-0 bg-black/40 z-40 md:hidden"
@@ -140,7 +154,7 @@ export default function Sidebar({
 
           <nav className="flex flex-col gap-1">
             {menu.map(item => (
-              <div key={item.href}>{renderMenuItem(item)}</div>
+              <div key={item.href || item.title}>{renderMenuItem(item)}</div>
             ))}
           </nav>
         </div>
