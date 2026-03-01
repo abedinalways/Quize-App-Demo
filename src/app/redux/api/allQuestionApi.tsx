@@ -2,12 +2,16 @@ import { baseApi } from './baseApi';
 
 /* ================= TYPES ================= */
 
+export type Difficulty = 'Intern' | 'Senior' | 'Boards';
+
 export interface Question {
-  id: string;
+  id: string; // Mongo _id
   question_title: string;
-  question_id: string;
-  difficulty: 'Intern' | 'Senior' | 'Boards';
+  question_id: string; // Display ID
+  difficulty: Difficulty;
   topic: string[];
+  total_attempts: number;
+  correct_percentage: number;
 }
 
 export interface QuestionMeta {
@@ -36,7 +40,6 @@ export interface GetQuestionsParams {
 
 export const allQuestionApi = baseApi.injectEndpoints({
   endpoints: builder => ({
-    /* ---------- GET ALL QUESTIONS ---------- */
     getQuestions: builder.query<
       GetQuestionsResponse,
       GetQuestionsParams | undefined
@@ -49,16 +52,6 @@ export const allQuestionApi = baseApi.injectEndpoints({
       providesTags: ['allQuestions'],
     }),
 
-    /* ---------- GET SINGLE QUESTION ---------- */
-    getSingleQuestion: builder.query<Question, string>({
-      query: id => ({
-        url: `/admin/questions/${id}`,
-        method: 'GET',
-      }),
-      providesTags: ['allQuestions'],
-    }),
-
-    /* ---------- DELETE QUESTION ---------- */
     deleteQuestion: builder.mutation<
       { success: boolean; message: string },
       string
@@ -69,15 +62,15 @@ export const allQuestionApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['allQuestions'],
     }),
-    /* ---------- UPDATE QUESTION ---------- */
+
     updateQuestion: builder.mutation<
       { success: boolean; message: string },
-      { id: string; formData: FormData }
+      { id: string; data: Partial<Question> }
     >({
-      query: ({ id, formData }) => ({
+      query: ({ id, data }) => ({
         url: `/admin/questions/${id}`,
         method: 'PATCH',
-        body: formData,
+        body: data,
       }),
       invalidatesTags: ['allQuestions'],
     }),
@@ -86,7 +79,6 @@ export const allQuestionApi = baseApi.injectEndpoints({
 
 export const {
   useGetQuestionsQuery,
-  useGetSingleQuestionQuery,
   useDeleteQuestionMutation,
   useUpdateQuestionMutation,
 } = allQuestionApi;

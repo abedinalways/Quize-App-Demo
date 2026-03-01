@@ -3,14 +3,16 @@
 import { useMemo, useState } from 'react';
 import DeleteIcon from '../reusable/icons/DeleteIcon';
 import EditIconAdmin from '../reusable/icons/EditIconAdmin';
+import { Difficulty } from '@/app/redux/api/allQuestionApi';
 
 export type Question = {
   id: string;
+  question_id: string;
   text: string;
   topic: string[];
-  difficulty: string;
-  attempts: number;
-  correct: number;
+  difficulty: Difficulty;
+  total_attempts: number;
+  correct_percentage: number;
 };
 
 type Props = {
@@ -35,7 +37,7 @@ export default function QuestionsTable({
     let result = data.filter(
       q =>
         q.text.toLowerCase().includes(search.toLowerCase()) ||
-        q.id.toLowerCase().includes(search.toLowerCase()),
+        q.question_id.toLowerCase().includes(search.toLowerCase()),
     );
 
     if (sortKey) {
@@ -63,24 +65,20 @@ export default function QuestionsTable({
 
   return (
     <div className="bg-white rounded-[10px] shadow-sm p-5 mt-8">
-      {/* Header */}
       <div className="flex justify-between mb-4">
-        <h3 className="font-semibold text-[#01281e] text-[20px]">Questions</h3>
+        <h3 className="font-semibold text-[20px]">Questions</h3>
 
-        <div className="flex gap-3">
-          <input
-            placeholder="Search..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="border rounded-md px-3 py-2 text-sm"
-          />
-        </div>
+        <input
+          placeholder="Search..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="border rounded-md px-3 py-2 text-sm"
+        />
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
-          <thead className="bg-[#01503b] text-white h-[89px]">
+          <thead className="bg-[#01503b] text-white">
             <tr>
               <th
                 className="px-4 py-3 cursor-pointer"
@@ -104,48 +102,33 @@ export default function QuestionsTable({
 
           <tbody>
             {filteredData.map((question, index) => (
-              <tr
-                key={question.id}
-                className={index % 2 ? 'bg-[#f9fafb]' : 'bg-white'}
-              >
-                <td className="px-4 py-4 text-center">{question.id}</td>
-                <td className="px-4 py-4  text-center">{question.text}</td>
+              <tr key={question.id}>
                 <td className="px-4 py-4 text-center">
-                  <div className="flex justify-center  gap-3 flex-wrap">
-                    {question.topic?.map(t => (
-                      <span key={t} className='rounded-sm px-3 py-2 bg-green-900 text-white'>{t}</span>
-                    ))}
-                  </div>
+                  {question.question_id}
+                </td>
+                <td className="px-4 py-4 text-center">{question.text}</td>
+                <td className="px-4 py-4 text-center">
+                  {question.topic.join(', ')}
                 </td>
                 <td className="px-4 py-4 text-center">{question.difficulty}</td>
-                <td className="px-4 py-4 text-center">{question.attempts}</td>
-                <td className="px-4 py-4 text-center">{question.correct}</td>
+                <td className="px-4 py-4 text-center">
+                  {question.total_attempts}
+                </td>
+                <td className="px-4 py-4 text-center">
+                  {question.correct_percentage}
+                </td>
                 <td className="px-4 py-4 text-center">
                   <div className="flex justify-center gap-3">
-                    <button
-                      onClick={() => onEdit?.(question)}
-                      className="cursor-pointer"
-                    >
+                    <button className='cursor-pointer' onClick={() => onEdit?.(question)}>
                       <EditIconAdmin />
                     </button>
-                    <button
-                      onClick={() => onDelete?.(question)}
-                      className="cursor-pointer"
-                    >
+                    <button className='cursor-pointer' onClick={() => onDelete?.(question)}>
                       <DeleteIcon />
                     </button>
                   </div>
                 </td>
               </tr>
             ))}
-
-            {filteredData.length === 0 && (
-              <tr>
-                <td colSpan={7} className="text-center py-10 text-gray-500">
-                  No questions found
-                </td>
-              </tr>
-            )}
           </tbody>
         </table>
       </div>

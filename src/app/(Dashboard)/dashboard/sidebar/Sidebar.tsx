@@ -62,7 +62,7 @@ export default function Sidebar({
         <button
           key={item.title}
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all hover:bg-red-500 hover:text-white w-full text-left"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all cursor-pointer hover:bg-red-500 hover:text-white w-full text-left"
         >
           <Image src={item.icon} width={18} height={18} alt={item.title} />
           <span className="text-sm">{item.title}</span>

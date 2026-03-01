@@ -1,67 +1,31 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { io, Socket } from 'socket.io-client';
+import React, { createContext, useContext } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import type { AppDispatch, RootState } from '@/app/redux/store';
+import { useChatSocket } from '@/app/redux/api/chat/useChatSocket';
+import {
+  Conversation,
+  Message,
+  useGetConversationsQuery,
+  useGetMessagesQuery,
+  useSendMessageMutation,
+} from '@/app/redux/api/chat/chatApi';
+import {
+  setActiveConversation,
+  setTyping,
+} from '@/app/redux/api/chat/chatSlice';
+import { skipToken } from '@reduxjs/toolkit/query';
 
-export type Sender = 'me' | 'doctor';
-
-export type CustomAttachment = {
-  id: string;
-  name: string;
-  attachmentsType?: 'test-result' | 'file' | 'unknown';
-  testId?: string;
-};
-export function createCustomAttachment(
-  id: string,
-  name: string,
-  attachmentsType?: 'test-result' | 'file' | 'unknown',
-  testId?: string
-): CustomAttachment {
-  return {
-    id,
-    attachmentsType,
-    name,
-    testId,
-  };
-}
-
-export function isCustomAttachment(obj: unknown): obj is CustomAttachment {
-  return (
-    typeof obj === 'object' &&
-    obj !== null &&
-    typeof (obj as Record<string, unknown>).id === 'string' &&
-    ((obj as Record<string, unknown>).attachmentsType === undefined ||
-      ['test-result', 'file', 'unknown'].includes(
-        (obj as Record<string, unknown>).attachmentsType as string
-      )) &&
-    ((obj as Record<string, unknown>).testId === undefined ||
-      typeof (obj as Record<string, unknown>).testId === 'string')
-  );
-}
-export type Message = {
-  id: string;
-  sender: 'me' | 'doctor';
-  text?: string;
-  attachments?: File[] | CustomAttachment[];
-  createdAt: number;
-};
-
-export type Conversation = {
-  id: string;
-  name: string;
-  avatar: string;
-  messages: Message[];
-};
-
-type ChatContextType = {
+interface ChatContextType {
   conversations: Conversation[];
-  activeConversation: Conversation | null;
+  messages: Message[];
+  activeConversationId: string | null;
   selectConversation: (id: string) => void;
-  sendMessage: (text: string, attachments?: File[]) => void;
+  sendMessage: (text: string, attachments?: string[]) => Promise<void>;
   isTyping: boolean;
   setTyping: (v: boolean) => void;
-  socket: Socket | null;
-};
+}
 
 const ChatContext = createContext<ChatContextType | null>(null);
 
@@ -72,173 +36,56 @@ export const useChat = () => {
 };
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
-  const [socket, setSocket] = useState<Socket | null>(null);
+  const dispatch = useDispatch<AppDispatch>();
 
-  // Initialize Socket Connection
-  useEffect(() => {
-    // TODO: Configure your actual Socket URL in environment variables
-    // e.g., process.env.NEXT_PUBLIC_SOCKET_URL
-    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000';
-    
-    console.log('Initializing socket connection to:', socketUrl);
-    
-    const socketInstance = io(socketUrl, {
-      withCredentials: true,
-      transports: ['websocket'], // Prefer WebSocket transport
-      autoConnect: true,
+  const { activeConversationId, typing } = useSelector(
+    (state: RootState) => state.chat,
+  );
+
+  // 🔥 SOCKET (safe emitter only)
+  const { emitMessage } = useChatSocket();
+
+  // 🔥 GET CONVERSATIONS
+  const { data: conversationsData } = useGetConversationsQuery();
+
+  // 🔥 GET MESSAGES (safe skip without !)
+  const { data: messagesData } = useGetMessagesQuery(
+    activeConversationId ? { conversationId: activeConversationId } : skipToken,
+  );
+
+  const [sendMessageApi] = useSendMessageMutation();
+
+  // 🔥 SEND MESSAGE
+  async function sendMessage(text: string, attachments: string[] = []) {
+    if (!activeConversationId) return;
+
+    // Emit via socket (real-time)
+    emitMessage('send_message', {
+      conversationId: activeConversationId,
+      message: {
+        message: text,
+        attachments,
+      },
     });
 
-    socketInstance.on('connect', () => {
-      console.log('Socket connected:', socketInstance.id);
+    // Fallback persistence via REST
+    await sendMessageApi({
+      conversationId: activeConversationId,
+      message: text,
+      attachments,
     });
-
-    socketInstance.on('connect_error', (err) => {
-      console.error('Socket connection error:', err);
-    });
-
-    socketInstance.on('disconnect', () => {
-      console.log('Socket disconnected');
-    });
-
-    // Setup global listeners here if needed
-    // socketInstance.on('receive_message', handleReceiveMessage);
-
-    setSocket(socketInstance);
-
-    return () => {
-      socketInstance.disconnect();
-    };
-  }, []);
-
-  const [conversations, setConversations] = useState<Conversation[]>([
-    {
-      id: '1',
-      name: 'Sheikh Abedin',
-      avatar: '/images/dashboard/message/doctor.png',
-      messages: [
-        {
-          id: 'm1',
-          sender: 'doctor',
-          text: 'Hi! Did you see the latest research on TMJ disorders?',
-          // eslint-disable-next-line react-hooks/purity
-          createdAt: Date.now(),
-        },
-        {
-          id: 'm2',
-          sender: 'me',
-          text: 'Yes! The findings were fascinating. I can send you the full paper if you would like.',
-          // eslint-disable-next-line react-hooks/purity
-          createdAt: Date.now(),
-        },
-        // {
-        //   id: 'm1',
-        //   sender: 'doctor',
-        //   text: 'Hi! hav you any idea about it?',
-        //   // eslint-disable-next-line react-hooks/purity
-        //   createdAt: Date.now(),
-        // },
-        {
-          id: 'm3',
-          sender: 'doctor',
-          text: 'Just wrapped up this Trauma block —60% correct. Curious how you would do.',
-          attachments: [
-            createCustomAttachment(
-              'foo',
-              'habijabi',
-              'test-result',
-              'test-id-1324'
-            ),
-          ],
-          // eslint-disable-next-line react-hooks/purity
-          createdAt: Date.now(),
-        },
-      ],
-    },
-    {
-      id: '2',
-      name: 'Sheikh A Dinar',
-      avatar: '/images/dashboard/message/doctor.png',
-      messages: [
-        {
-          id: 'm1',
-          sender: 'doctor',
-          text: 'Hi! Did you see the latest research on TMJ disorders?',
-          // eslint-disable-next-line react-hooks/purity
-          createdAt: Date.now(),
-        },
-        {
-          id: 'm2',
-          sender: 'me',
-          text: 'Yes! The findings were fascinating. I can send you the full paper if you would like.',
-          // eslint-disable-next-line react-hooks/purity
-          createdAt: Date.now(),
-        },
-        {
-          id: 'm1',
-          sender: 'doctor',
-          text: 'Hi! hav you any idea about it?',
-          // eslint-disable-next-line react-hooks/purity
-          createdAt: Date.now(),
-        },
-        
-      ],
-    },
-  ]);
-
-  const [activeId, setActiveId] = useState('1');
-  const [isTyping, setIsTyping] = useState(false);
-
-  const activeConversation = conversations.find(c => c.id === activeId) ?? null;
-
-  const selectConversation = (id: string) => setActiveId(id);
-
-  const sendMessage = (text: string, attachments: File[] = []) => {
-    if (!text.trim() && attachments.length === 0) return;
-
-    const newMessage: Message = {
-      id: crypto.randomUUID(),
-      sender: 'me',
-      text: text || undefined,
-      attachments: attachments.length ? attachments : undefined,
-      createdAt: Date.now(),
-    };
-
-    // Optimistic Update
-    setConversations(prev =>
-      prev.map(conv =>
-        conv.id === activeId
-          ? {
-              ...conv,
-              messages: [
-                ...conv.messages,
-                newMessage,
-              ],
-            }
-          : conv
-      )
-    );
-
-    // Emit to Socket
-    if (socket) {
-      socket.emit('send_message', {
-        conversationId: activeId,
-        message: newMessage
-      });
-    }
-
-    setIsTyping(false);
-  };
+  }
 
   return (
     <ChatContext.Provider
       value={{
-        conversations,
-        activeConversation,
-        selectConversation,
+        conversations: conversationsData?.data ?? [],
+        messages: messagesData?.data ?? [],
+        activeConversationId,
+        selectConversation: (id: string) => dispatch(setActiveConversation(id)),
         sendMessage,
-        isTyping,
-        setTyping: setIsTyping,
-        socket,
+        isTyping: typing,
+        setTyping: (v: boolean) => dispatch(setTyping(v)),
       }}
     >
       {children}
