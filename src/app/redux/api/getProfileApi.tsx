@@ -33,6 +33,7 @@ export interface ProfileData {
   publications: Publication[];
   followings: number;
   followers: number;
+  
 }
 
 /* ---------- Sub Types ---------- */
@@ -92,12 +93,14 @@ export type CreateSkillPayload = Omit<Skill, 'id'>;
 export const getProfileApi = baseApi.injectEndpoints({
   endpoints: builder => ({
     /* ---------- GET PROFILE ---------- */
-    getProfileData: builder.query<ProfileData, void>({
-      query: () => ({
+    getProfileData: builder.query<ProfileData, string>({
+      query: userid => ({
         url: '/profile',
+        params: { user_id: userid },
         method: 'GET',
         credentials: 'include',
       }),
+      
       providesTags: ['Profile'],
     }),
 

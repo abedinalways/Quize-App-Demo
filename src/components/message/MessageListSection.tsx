@@ -5,9 +5,8 @@ import { Input } from '../ui/input';
 import { Search } from 'lucide-react';
 import { useChat } from '@/app/(Dashboard)/context/ChatContext';
 
-
 export default function MessageListSection() {
-  const { conversations, selectConversation, activeConversation } = useChat();
+  const { conversations, selectConversation, activeConversationId } = useChat();
 
   return (
     <>
@@ -22,50 +21,32 @@ export default function MessageListSection() {
       </div>
 
       <div className="space-y-3">
-        {conversations.map(conv => {
-          const lastMessage = conv.messages.at(-1);
+        {conversations.map(conv => (
+          <div
+            key={conv.id}
+            onClick={() => selectConversation(conv.id)}
+            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer ${
+              activeConversationId === conv.id
+                ? 'bg-gray-100'
+                : 'hover:bg-gray-50'
+            }`}
+          >
+            <Image
+              src="/images/dashboard/message/doctor.png"
+              alt="user"
+              width={40}
+              height={40}
+              className="rounded-full"
+            />
 
-          return (
-            <div
-              key={conv.id}
-              onClick={() => selectConversation(conv.id)}
-              className={`flex items-center gap-3 p-3 rounded-xl overflow-hidden cursor-pointer
-              ${
-                activeConversation?.id === conv.id
-                  ? 'bg-gray-100'
-                  : 'hover:bg-gray-50'
-              }`}
-            >
-              <Image
-                src={conv.avatar}
-                alt={conv.name}
-                width={40}
-                height={40}
-                className="rounded-full"
-              />
-
-              <div className="flex-1">
-                <p className="text-sm font-medium">{conv.name}</p>
-                <p className="text-xs text-gray-500 truncate">
-                  <p className="text-xs text-gray-500 truncate">
-                    {lastMessage?.text ??
-                      (lastMessage?.attachments?.length
-                        ? `📎 ${lastMessage.attachments
-                            .map(file => {
-                              
-                              if ('name' in file) {
-                                return file.name; 
-                              }
-                              return ''; 
-                            })
-                            .join(', ')}`
-                        : '')}
-                  </p>
-                </p>
-              </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium">Conversation {conv.id}</p>
+              <p className="text-xs text-gray-500 truncate">
+                Click to open chat
+              </p>
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
     </>
   );

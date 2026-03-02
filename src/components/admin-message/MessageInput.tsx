@@ -13,7 +13,21 @@ import { VoiceIcon } from '../reusable/icons/VoiceIcon';
 import { ArrowUp } from '../reusable/icons/ArrowUpperButton';
 import { useChat } from '@/app/(Dashboard)/context/ChatContext';
 
+
+
+export interface MessageInputProps {
+  testCardData: {
+    questions: number;
+    correctPercentage: number;
+    time: string;
+    percentile: number;
+    difficulty: string;
+    category: string;
+  };
+  showTestCard: boolean;
+}
 export default function MessageInput() {
+ 
   const { sendMessage, setTyping } = useChat();
   const [input, setInput] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -70,14 +84,19 @@ export default function MessageInput() {
     setFileInputKey(prev => prev + 1);
   };
 
-  const handleSend = () => {
-    sendMessage(input, attachments);
+  const handleSend = async () => {
+   
+    const attachmentNames = attachments.map(file => file.name);
+
+    await sendMessage(input, attachmentNames);
+
     setInput('');
     setAttachments([]);
   };
 
   return (
     <div className="relative">
+    
       {/* Attachment preview */}
       {attachments.length > 0 && (
         <div className="pb-2 flex gap-2 flex-wrap absolute top-0 -translate-y-full left-0">

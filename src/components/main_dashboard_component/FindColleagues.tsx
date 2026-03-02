@@ -77,7 +77,7 @@ const FindColleagues = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {colleagues.map(colleague => (
           <Card key={colleague.id} className="p-4 hover:shadow-md transition">
-            <Link href={`/dashboard/profile/${colleague.id}`}>
+            <Link href={`/dashboard/user/profile/${colleague.id}`}>
               <div className="flex gap-3">
                 <Avatar className="h-14 w-14">
                   <AvatarImage src={colleague.avatar} />
@@ -96,7 +96,7 @@ const FindColleagues = () => {
             {showAll && (
               <div className="mt-4 flex gap-2">
                 <Btn
-                  href="/dashboard/messages"
+                  href="/dashboard/user/messages"
                   className="flex-1 bg-[#01503b] text-white py-2"
                 >
                   Message

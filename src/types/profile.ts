@@ -1,6 +1,7 @@
 
 export interface UserProfile {
   name: string;
+  id: string;
   details: string;
   title: string;
   avatar: string;
@@ -9,7 +10,6 @@ export interface UserProfile {
   joiningDate: string;
   followers: number;
   following: number;
-  
 }
 
 export interface EducationItem {

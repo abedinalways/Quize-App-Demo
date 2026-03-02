@@ -1,15 +1,15 @@
 'use client';
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '@/app/redux/store';
 import { useChatSocket } from '@/app/redux/api/chat/useChatSocket';
 import {
-  Conversation,
-  Message,
   useGetConversationsQuery,
   useGetMessagesQuery,
   useSendMessageMutation,
+  Conversation,
+  Message,
 } from '@/app/redux/api/chat/chatApi';
 import {
   setActiveConversation,
@@ -37,38 +37,37 @@ export const useChat = () => {
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const dispatch = useDispatch<AppDispatch>();
-
   const { activeConversationId, typing } = useSelector(
     (state: RootState) => state.chat,
   );
 
-  // 🔥 SOCKET (safe emitter only)
-  const { emitMessage } = useChatSocket();
+  const { joinConversation, emitMessage } = useChatSocket();
 
-  // 🔥 GET CONVERSATIONS
   const { data: conversationsData } = useGetConversationsQuery();
 
-  // 🔥 GET MESSAGES (safe skip without !)
   const { data: messagesData } = useGetMessagesQuery(
     activeConversationId ? { conversationId: activeConversationId } : skipToken,
   );
 
   const [sendMessageApi] = useSendMessageMutation();
 
-  // 🔥 SEND MESSAGE
+  useEffect(() => {
+    if (activeConversationId) {
+      joinConversation(activeConversationId);
+    }
+  }, [activeConversationId, joinConversation]);
+
   async function sendMessage(text: string, attachments: string[] = []) {
     if (!activeConversationId) return;
 
-    // Emit via socket (real-time)
-    emitMessage('send_message', {
+    // Optimistic UI
+    emitMessage({
       conversationId: activeConversationId,
-      message: {
-        message: text,
-        attachments,
-      },
+      message: text,
+      attachments,
     });
 
-    // Fallback persistence via REST
+    // Persist
     await sendMessageApi({
       conversationId: activeConversationId,
       message: text,
@@ -82,10 +81,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         conversations: conversationsData?.data ?? [],
         messages: messagesData?.data ?? [],
         activeConversationId,
-        selectConversation: (id: string) => dispatch(setActiveConversation(id)),
+        selectConversation: id => dispatch(setActiveConversation(id)),
         sendMessage,
         isTyping: typing,
-        setTyping: (v: boolean) => dispatch(setTyping(v)),
+        setTyping: v => dispatch(setTyping(v)),
       }}
     >
       {children}

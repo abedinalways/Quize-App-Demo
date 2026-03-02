@@ -49,6 +49,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
   const [modalType, setModalType] = useState<'followers' | 'following'>(
     'followers'
   );
+  console.log(user, 'data')
 
   return (
     <>
@@ -60,7 +61,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
               alt="Profile image"
               width={213}
               height={255}
-              className="rounded-sm"
+              className="rounded-sm "
             />
           </div>
 
@@ -68,6 +69,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
             <h2 className="text-[28px] text-[#0f172b] font-semibold">
               {user.name}
             </h2>
+           
             <p className="text-[18px] text-[#047857]  ">{user.title}</p>
 
             <div className="flex md:gap-[48px] gap-6 items-center text-xs md:text-[16px] font-light text-[#6b7280] ">
@@ -121,7 +123,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
             </div>
 
             <div className="flex gap-3 mb-[24px]">
-              <Link href="/dashboard/messages">
+              <Link href={`/dashboard/user/messages/${user.id}`}>
                 <button className="bg-[#01503b] px-[24px] py-[14px] text-center text-[#fff] rounded-[8px] cursor-pointer">
                   Message
                 </button>

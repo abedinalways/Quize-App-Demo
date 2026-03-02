@@ -1,6 +1,6 @@
 import MessageListSection from '@/components/message/MessageListSection';
 import React from 'react';
-import { ChatProvider } from '../../context/ChatContext';
+import { ChatProvider } from '../../../context/ChatContext';
 
 export default function ChatLayout({ children }: React.PropsWithChildren) {
   return (

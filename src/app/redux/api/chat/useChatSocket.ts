@@ -2,8 +2,8 @@
 
 import { useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { useDispatch, useSelector } from 'react-redux';
-import type { AppDispatch, RootState } from '../../store';
+import { useDispatch } from 'react-redux';
+import type { AppDispatch } from '../../store';
 import { chatApi } from './chatApi';
 import type { Message } from './chatApi';
 
@@ -15,25 +15,27 @@ export function useChatSocket() {
   const socketRef = useRef<Socket | null>(null);
   const dispatch = useDispatch<AppDispatch>();
 
-  const { activeConversationId } = useSelector(
-    (state: RootState) => state.chat,
-  );
-
   useEffect(() => {
-    const socketInstance = io(process.env.NEXT_PUBLIC_SOCKET_URL!, {
+    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL!, {
+      transports: ['websocket'],
       auth: {
         token: localStorage.getItem('token'),
       },
     });
 
-    socketRef.current = socketInstance;
+    socketRef.current = socket;
 
-    socketInstance.on('receive_message', (message: SocketMessage) => {
+    socket.on('connect', () => {
+      console.log(' Socket Connected:', socket.id);
+    });
+
+    socket.on('receive_message', (message: SocketMessage) => {
       dispatch(
         chatApi.util.updateQueryData(
           'getMessages',
           { conversationId: message.conversationId },
           draft => {
+            if (!draft?.data) return;
             draft.data.push(message);
           },
         ),
@@ -41,19 +43,21 @@ export function useChatSocket() {
     });
 
     return () => {
-      socketInstance.disconnect();
+      socket.disconnect();
     };
   }, [dispatch]);
 
-  useEffect(() => {
-    if (!socketRef.current || !activeConversationId) return;
-
-    socketRef.current.emit('join_conversation', activeConversationId);
-  }, [activeConversationId]);
-
-  const emitMessage = (event: string, payload: unknown) => {
-    socketRef.current?.emit(event, payload);
+  const joinConversation = (conversationId: string) => {
+    socketRef.current?.emit('join_conversation', conversationId);
   };
 
-  return { emitMessage };
+  const emitMessage = (payload: {
+    conversationId: string;
+    message: string;
+    attachments?: string[];
+  }) => {
+    socketRef.current?.emit('send_message', payload);
+  };
+
+  return { joinConversation, emitMessage };
 }

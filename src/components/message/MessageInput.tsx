@@ -84,8 +84,12 @@ export default function MessageInput() {
     setFileInputKey(prev => prev + 1);
   };
 
-  const handleSend = () => {
-    sendMessage(input, attachments);
+  const handleSend = async () => {
+   
+    const attachmentNames = attachments.map(file => file.name);
+
+    await sendMessage(input, attachmentNames);
+
     setInput('');
     setAttachments([]);
   };
