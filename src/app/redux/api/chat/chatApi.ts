@@ -9,6 +9,7 @@ interface ChatUser {
   id: string;
   name: string;
   avatar?: string;
+  avatar_url?: string;
 }
 
 interface ChatAttachment {
@@ -31,10 +32,17 @@ export interface Message {
   id: string;
   message: string | null;
   created_at: string;
-  status: string;
+  status: string; // "SENDING" | "SENT" etc
   sender: ChatUser;
   receiver: ChatUser;
   attachments: ChatAttachment[];
+}
+
+export interface SendMessagePayload {
+  conversationId: string;
+  receiverId: string;
+  message?: string;
+  attachments?: File[];
 }
 
 export const chatApi = baseApi.injectEndpoints({
@@ -49,9 +57,9 @@ export const chatApi = baseApi.injectEndpoints({
 
     getMessages: builder.query<
       ApiResponse<Message[]>,
-      { conversationId: string; limit?: number }
+      { conversationId: string; limit: number }
     >({
-      query: ({ conversationId, limit = 20 }) => ({
+      query: ({ conversationId, limit }) => ({
         url: '/chat/message',
         method: 'GET',
         params: {
@@ -59,24 +67,94 @@ export const chatApi = baseApi.injectEndpoints({
           limit,
         },
       }),
+
+      // ✅ IMPORTANT: cache key = conversationId ONLY
+      serializeQueryArgs: ({ queryArgs }) => queryArgs.conversationId,
+
       providesTags: (result, error, arg) => [
         { type: 'Chat', id: arg.conversationId },
       ],
     }),
 
-    sendMessage: builder.mutation<
-      ApiResponse<Message>,
-      {
-        conversationId: string;
-        message?: string;
-        attachments?: string[];
-      }
-    >({
-      query: body => ({
-        url: '/chat/message',
-        method: 'POST',
-        body,
-      }),
+    sendMessage: builder.mutation<ApiResponse<Message>, SendMessagePayload>({
+      query: ({ conversationId, receiverId, message, attachments }) => {
+        const formData = new FormData();
+
+        formData.append('conversation_id', conversationId);
+        formData.append('receiver_id', receiverId);
+
+        if (message?.trim()) formData.append('message', message);
+
+        attachments?.forEach(file => {
+          // ✅ backend expects "files"
+          formData.append('files', file);
+        });
+
+        return {
+          url: '/chat/message',
+          method: 'POST',
+          body: formData,
+        };
+      },
+
+      async onQueryStarted(arg, { dispatch, queryFulfilled, getState }) {
+        const state: any = getState();
+        const me = state.auth?.user || state.auth?.auth?.user;
+
+        const tempId = `temp-${Date.now()}`;
+
+        // ✅ Pass object with conversationId AND limit
+        const patch = dispatch(
+          chatApi.util.updateQueryData(
+            'getMessages',
+            { conversationId: arg.conversationId, limit: 50 },
+            draft => {
+              if (!draft?.data) draft.data = [];
+
+              draft.data.push({
+                id: tempId,
+                message: arg.message ?? null,
+                created_at: new Date().toISOString(),
+                status: 'SENDING',
+                sender: {
+                  id: me?.id ?? 'me',
+                  name: me?.name ?? 'Me',
+                  avatar_url: me?.avatar_url,
+                },
+                receiver: {
+                  id: arg.receiverId,
+                  name: '',
+                },
+                attachments: [],
+              });
+            },
+          ),
+        );
+
+        try {
+          const { data } = await queryFulfilled;
+
+          dispatch(
+            chatApi.util.updateQueryData(
+              'getMessages',
+              { conversationId: arg.conversationId, limit: 50 },
+              draft => {
+                if (!draft?.data) return;
+
+                const idx = draft.data.findIndex(m => m.id === tempId);
+                if (idx !== -1) {
+                  draft.data[idx] = data.data;
+                } else {
+                  draft.data.push(data.data);
+                }
+              },
+            ),
+          );
+        } catch (e) {
+          patch.undo();
+        }
+      },
+
       invalidatesTags: (result, error, arg) => [
         { type: 'Chat', id: arg.conversationId },
       ],

@@ -42,7 +42,7 @@ export default function MessageListSection() {
             <div className="flex-1">
               <p className="text-sm font-medium">Conversation {conv.id}</p>
               <p className="text-xs text-gray-500 truncate">
-                Click to open chat
+                Last message preview
               </p>
             </div>
           </div>

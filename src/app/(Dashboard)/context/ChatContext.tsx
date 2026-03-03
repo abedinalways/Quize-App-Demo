@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import type { AppDispatch, RootState } from '@/app/redux/store';
+import { store, type AppDispatch, type RootState } from '@/app/redux/store';
 import { useChatSocket } from '@/app/redux/api/chat/useChatSocket';
 import {
   useGetConversationsQuery,
@@ -22,7 +22,7 @@ interface ChatContextType {
   messages: Message[];
   activeConversationId: string | null;
   selectConversation: (id: string) => void;
-  sendMessage: (text: string, attachments?: string[]) => Promise<void>;
+  sendMessage: (text: string, attachments?: File[]) => Promise<void>;
   isTyping: boolean;
   setTyping: (v: boolean) => void;
 }
@@ -41,38 +41,52 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     (state: RootState) => state.chat,
   );
 
-  const { joinConversation, emitMessage } = useChatSocket();
+  const { joinConversation } = useChatSocket();
 
   const { data: conversationsData } = useGetConversationsQuery();
 
   const { data: messagesData } = useGetMessagesQuery(
-    activeConversationId ? { conversationId: activeConversationId } : skipToken,
+    activeConversationId
+      ? { conversationId: activeConversationId, limit: 20 }
+      : skipToken,
   );
 
   const [sendMessageApi] = useSendMessageMutation();
 
+  // ✅ auto select first conversation
   useEffect(() => {
-    if (activeConversationId) {
-      joinConversation(activeConversationId);
+    const list = conversationsData?.data ?? [];
+    if (!activeConversationId && list.length > 0) {
+      dispatch(setActiveConversation(list[0].id));
     }
+  }, [conversationsData, activeConversationId, dispatch]);
+
+  // ✅ join socket room when conversation changes
+  useEffect(() => {
+    if (!activeConversationId) return;
+    joinConversation(activeConversationId);
   }, [activeConversationId, joinConversation]);
 
-  async function sendMessage(text: string, attachments: string[] = []) {
+  async function sendMessage(text: string, attachments: File[] = []) {
     if (!activeConversationId) return;
 
-    // Optimistic UI
-    emitMessage({
-      conversationId: activeConversationId,
-      message: text,
-      attachments,
-    });
+    const conv = conversationsData?.data?.find(
+      c => c.id === activeConversationId,
+    );
+    if (!conv) return;
 
-    // Persist
+    const meId = store.getState().auth?.user?.id;
+
+    // ✅ dynamic receiver id
+    const receiverId =
+      conv.creator_id === meId ? conv.participant_id : conv.creator_id;
+
     await sendMessageApi({
       conversationId: activeConversationId,
+      receiverId,
       message: text,
       attachments,
-    });
+    }).unwrap();
   }
 
   return (

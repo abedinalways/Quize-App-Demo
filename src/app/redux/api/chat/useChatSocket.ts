@@ -30,13 +30,19 @@ export function useChatSocket() {
     });
 
     socket.on('receive_message', (message: SocketMessage) => {
+      
       dispatch(
         chatApi.util.updateQueryData(
           'getMessages',
-          { conversationId: message.conversationId },
+          { conversationId: message.conversationId, limit: 50 },
           draft => {
-            if (!draft?.data) return;
-            draft.data.push(message);
+            if (!draft?.data) draft.data = [];
+
+            // avoid duplicates
+            const exists = draft.data.some(m => m.id === message.id);
+            if (!exists) {
+              draft.data.push(message);
+            }
           },
         ),
       );
@@ -51,13 +57,5 @@ export function useChatSocket() {
     socketRef.current?.emit('join_conversation', conversationId);
   };
 
-  const emitMessage = (payload: {
-    conversationId: string;
-    message: string;
-    attachments?: string[];
-  }) => {
-    socketRef.current?.emit('send_message', payload);
-  };
-
-  return { joinConversation, emitMessage };
+  return { joinConversation };
 }

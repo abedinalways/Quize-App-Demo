@@ -84,15 +84,23 @@ export default function MessageInput() {
     setFileInputKey(prev => prev + 1);
   };
 
-  const handleSend = async () => {
+  // const handleSend = async () => {
    
-    const attachmentNames = attachments.map(file => file.name);
+  //   const attachmentNames = attachments.map(file => file.name);
 
-    await sendMessage(input, attachmentNames);
+  //   await sendMessage(input, attachmentNames);
 
-    setInput('');
-    setAttachments([]);
-  };
+  //   setInput('');
+  //   setAttachments([]);
+  // };
+ const handleSend = async () => {
+   if (!input.trim() && attachments.length === 0) return;
+
+   await sendMessage(input, attachments); 
+
+   setInput('');
+   setAttachments([]);
+ };
 
   return (
     <div className="relative">
