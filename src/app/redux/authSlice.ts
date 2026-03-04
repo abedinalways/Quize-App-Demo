@@ -46,6 +46,7 @@ const authSlice = createSlice({
     setAuth(state, action: PayloadAction<Credential>) {
       state.auth = action.payload;
 
+      console.log('Setting auth:', state.auth);
       if (state.auth.token) {
         Cookies.set('token', state.auth.token, {
           secure: process.env.NODE_ENV === 'production',

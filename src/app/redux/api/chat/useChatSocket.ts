@@ -6,6 +6,7 @@ import { useDispatch } from 'react-redux';
 import type { AppDispatch } from '../../store';
 import { chatApi } from './chatApi';
 import type { Message } from './chatApi';
+import Cookies from 'js-cookie';
 
 interface SocketMessage extends Message {
   conversationId: string;
@@ -16,10 +17,19 @@ export function useChatSocket() {
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
-    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL!, {
-      transports: ['websocket'],
-      auth: {
-        token: localStorage.getItem('token'),
+    // const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL!, {
+    //   transports: ['websocket'],
+    //   auth: {
+    //     token: localStorage.getItem('token'),
+    //   },
+    // });
+
+    const token = Cookies.get('token');
+    console.log('==================  Connecting to socket with token:', token);
+
+    const socket = io('http://192.168.7.42:4004', {
+      extraHeaders: {
+        authorization: `Bearer ${token}`,
       },
     });
 
@@ -28,9 +38,11 @@ export function useChatSocket() {
     socket.on('connect', () => {
       console.log(' Socket Connected:', socket.id);
     });
+    console.log('Initial messages:');
 
-    socket.on('receive_message', (message: SocketMessage) => {
-      
+    socket.on('message', (message: SocketMessage) => {
+      console.log(message, 'my message');
+      alert('New message received: ' + message.message);
       dispatch(
         chatApi.util.updateQueryData(
           'getMessages',

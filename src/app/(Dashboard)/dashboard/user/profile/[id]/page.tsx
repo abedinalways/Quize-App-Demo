@@ -6,7 +6,6 @@ import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileTabs from '@/components/profile/ProfileTabs';
 import { useGetProfileDataQuery } from '@/app/redux/api/getProfileApi';
 
-
 export default function ProfilePage({
   params,
 }: {
@@ -18,8 +17,9 @@ export default function ProfilePage({
 
   const { data, isLoading, error } = useGetProfileDataQuery(id);
 
-  const apiData = data?.data; 
-  console.log(apiData, 'amar data')
+  const apiData = data?.data;
+
+  console.log(apiData, '========         colleague data');
 
   if (isLoading)
     return <div className="p-10 text-center">Loading profile...</div>;
@@ -73,7 +73,7 @@ export default function ProfilePage({
         <ProfileTabs
           activeTab={activeTab}
           setActiveTab={setActiveTab}
-          data={formattedData }
+          data={formattedData}
         />
       </div>
     </div>

@@ -14,6 +14,7 @@ const nextConfig = {
         port: '4004',
         pathname: '/public/storage/avatars/**',
       },
+      
     ],
   },
 };

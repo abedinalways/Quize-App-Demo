@@ -2,6 +2,7 @@ import { baseApi } from '../../api/baseApi';
 
 interface ApiResponse<T> {
   success: boolean;
+  message: string;
   data: T;
 }
 
@@ -20,13 +21,30 @@ interface ChatAttachment {
   size?: number;
 }
 
-export interface Conversation {
+export type Conversation = {
   id: string;
   creator_id: string;
   participant_id: string;
   created_at: string;
   updated_at: string;
-}
+  creator: {
+    id: string;
+    name: string;
+    avatar: string;
+    avatar_url: string;
+  };
+  participant: {
+    id: string;
+    name: string;
+    avatar: string;
+    avatar_url: string;
+  };
+  messages: Array<{
+    id: string;
+    message: string;
+    created_at: string;
+  }>;
+};
 
 export interface Message {
   id: string;
@@ -159,11 +177,23 @@ export const chatApi = baseApi.injectEndpoints({
         { type: 'Chat', id: arg.conversationId },
       ],
     }),
+
+    createConversation: builder.mutation<
+      ApiResponse<Conversation>,
+      { participant_id: string }
+    >({
+      query: body => ({
+        url: '/chat/conversation',
+        method: 'POST',
+        body,
+      }),
+    }),
   }),
 });
 
 export const {
   useGetConversationsQuery,
+  useCreateConversationMutation,
   useGetMessagesQuery,
   useSendMessageMutation,
 } = chatApi;

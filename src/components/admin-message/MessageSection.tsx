@@ -26,7 +26,7 @@ export default function MessageSection() {
   return (
     <div ref={containerRef} className="p-3 overflow-y-auto">
       {messages.map(msg => {
-        const isMe = msg.sender?.id === msg.sender?.id; // adjust if you have auth user id
+        const isMe = msg.sender?.id === msg.sender?.id; 
 
         return (
           <div

@@ -7,7 +7,6 @@ import { NotificationButton } from '@/components/topbar/NotificationButton';
 
 import { useMeQuery } from '@/app/redux/api/authApi';
 
-
 interface TopbarProps {
   onMenuClick?: () => void;
 }
@@ -15,9 +14,10 @@ interface TopbarProps {
 export default function Topbar({ onMenuClick }: TopbarProps = {}) {
   // const user = useAppSelector(state => state.auth.user);
   // const role = user?.role;
-  
-  const { data: user, error } = useMeQuery(); 
-  
+
+  const { data: user, error } = useMeQuery();
+  console.log('====== useMe', user?.id);
+
   // const profileHref =
   //   role === 'admin'
   //     ? '/dashboard/admin/manage-settings'

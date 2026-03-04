@@ -92,7 +92,7 @@ export const userMenu: MenuItem[] = [
   },
   {
     title: 'Messages',
-    href: '/dashboard/user/messages',
+    href: '/dashboard/user/messages/${userId}',
     icon: '/images/dashboard/img007.png',
   },
   {

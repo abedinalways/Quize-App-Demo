@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useEffect, useRef } from 'react';
 import { useChat } from '@/app/(Dashboard)/context/ChatContext';
 import { useSelector } from 'react-redux';
+import { AudioBubble } from './AudioBubble';
 
 interface AuthState {
   user?: { id: string };
@@ -22,7 +23,7 @@ export default function MessageSection() {
     (s: RootState) => s.auth?.user?.id || s.auth?.auth?.user?.id,
   );
 
-  // ✅ Only auto scroll (no GSAP full re-animation)
+  
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
@@ -46,7 +47,7 @@ export default function MessageSection() {
             >
               {!isMe && (
                 <Image
-                  src={ '/images/dashboard/img008.png'}
+                  src={'/images/dashboard/img008.png'}
                   alt="avatar"
                   width={32}
                   height={32}
@@ -66,46 +67,39 @@ export default function MessageSection() {
               >
                 {/* Message Text */}
                 {msg.message && (
-                  <p className="whitespace-pre-wrap">{msg.message}</p>
+                  <p className="whitespace-pre-wrap break-words break-all leading-relaxed">
+                    {msg.message}
+                  </p>
                 )}
 
-                {/* Attachments */}
                 {msg.attachments?.length > 0 && (
                   <div className="mt-2 space-y-2">
                     {msg.attachments.map(file => {
                       const isImage =
                         file.type?.includes('image') ||
-                        file.file_url?.match(/\.(jpeg|jpg|png|gif|webp)$/);
+                        file.file_url?.match(/\.(jpeg|jpg|png|gif|webp)$/i);
 
                       const isAudio =
                         file.type?.includes('audio') ||
-                        file.file_url?.match(/\.(mp3|wav|webm|ogg)$/);
+                        file.file_url?.match(/\.(mp3|wav|webm|ogg)$/i);
 
                       if (isImage) {
                         return (
                           <Image
                             key={file.id}
-                            src={'/images/dashboard/img008.png'}
+                            src={file.file_url}
                             alt={file.name}
-                            width={300}
+                            width={280}
                             height={200}
-                            className="rounded-xl object-cover"
+                            unoptimized
+                            className="rounded-xl object-cover max-h-[260px]"
                           />
                         );
                       }
 
                       if (isAudio) {
                         return (
-                          <div
-                            key={file.id}
-                            className="bg-black/10 rounded-xl p-2"
-                          >
-                            <audio
-                              controls
-                              src={file.file_url}
-                              className="w-full"
-                            />
-                          </div>
+                          <AudioBubble key={file.id} src={file.file_url} />
                         );
                       }
 
@@ -122,7 +116,6 @@ export default function MessageSection() {
                     })}
                   </div>
                 )}
-
                 {/* Time */}
                 <div className="text-[10px] opacity-70 mt-1 text-right">
                   {new Date(msg.created_at).toLocaleTimeString([], {

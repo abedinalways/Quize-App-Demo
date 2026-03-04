@@ -4,10 +4,11 @@ import Image from 'next/image';
 import { Input } from '../ui/input';
 import { Search } from 'lucide-react';
 import { useChat } from '@/app/(Dashboard)/context/ChatContext';
+import { useRouter } from 'next/navigation';
 
 export default function MessageListSection() {
   const { conversations, selectConversation, activeConversationId } = useChat();
-
+  const router = useRouter();
   return (
     <>
       <h4 className="font-semibold mb-3">All Messages</h4>
@@ -24,7 +25,7 @@ export default function MessageListSection() {
         {conversations.map(conv => (
           <div
             key={conv.id}
-            onClick={() => selectConversation(conv.id)}
+            onClick={() => router.push(`/dashboard/user/messages/${conv.id}`)}
             className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer ${
               activeConversationId === conv.id
                 ? 'bg-gray-100'
