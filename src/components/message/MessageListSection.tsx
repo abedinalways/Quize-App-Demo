@@ -27,7 +27,10 @@ export default function MessageListSection() {
         {conversations.map(conv => (
           <div
             key={conv.id}
-            onClick={() => router.push(`/dashboard/user/messages/${conv.id}`)}
+            onClick={() => {
+              selectConversation(conv.id);
+              router.push(`/dashboard/user/messages/${conv.id}`);
+            }}
             className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer ${
               activeConversationId === conv.id
                 ? 'bg-gray-100'

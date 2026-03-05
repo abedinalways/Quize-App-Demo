@@ -13,7 +13,7 @@ interface ChatUser {
   avatar_url?: string;
 }
 
-interface ChatAttachment {
+export interface ChatAttachment {
   id: string;
   file_url: string;
   type: string;
@@ -53,7 +53,7 @@ export interface Message {
   status: string; // "SENDING" | "SENT" etc
   sender: ChatUser;
   receiver: ChatUser;
-  attachments: File[];
+  attachments: ChatAttachment[];
 }
 
 export interface SendMessagePayload {

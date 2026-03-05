@@ -5,6 +5,7 @@ import { useEffect, useRef } from 'react';
 import { useChat } from '@/app/(Dashboard)/context/ChatContext';
 import { useSelector } from 'react-redux';
 import { AudioBubble } from './AudioBubble';
+import { useMeQuery } from '@/app/redux/api/authApi';
 
 interface AuthState {
   user?: { id: string };
@@ -17,26 +18,25 @@ interface RootState {
 
 export default function MessageSection() {
   const { messages } = useChat();
+  console.log(messages,'fgfgfgfgfgfgfgfgd')
   const endRef = useRef<HTMLDivElement>(null);
 
-  const meId = useSelector(
-    (s: RootState) => s.auth?.user?.id || s.auth?.auth?.user?.id,
-  );
+    
+  const me = useMeQuery();
 
-  
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
 
   return (
-    <div className="flex flex-col p-4 overflow-y-auto space-y-2">
+    <div className="flex flex-col p-4 overflow-y-auto space-y-3">
       {[...messages]
         .sort(
           (a, b) =>
             new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
         )
         .map(msg => {
-          const isMe = msg?.sender?.id === meId;
+          const isMe = msg?.sender?.id === me.data?.id;
 
           return (
             <div
@@ -45,33 +45,34 @@ export default function MessageSection() {
                 isMe ? 'justify-end' : 'justify-start'
               }`}
             >
+              {/* Avatar */}
               {!isMe && (
                 <Image
-                  src={'/images/dashboard/img008.png'}
+                  src="/images/dashboard/img008.png"
                   alt="avatar"
                   width={32}
                   height={32}
-                  className="rounded-full"
+                  className="rounded-full object-cover"
                 />
               )}
 
+              {/* Message Bubble */}
               <div
-                className={`
-                  relative px-4 py-3 rounded-2xl max-w-[70%] text-sm
-                  ${
-                    isMe
-                      ? 'bg-[#095f48] text-white rounded-br-sm'
-                      : 'bg-gray-100 text-gray-800 rounded-bl-sm'
-                  }
-                `}
+                className={`relative px-4 py-3 rounded-2xl max-w-[70%] shadow-sm text-sm
+                ${
+                  isMe
+                    ? 'bg-[#095f48] text-white rounded-br-sm'
+                    : 'bg-gray-100 text-[#003329] rounded-bl-sm'
+                }`}
               >
-                {/* Message Text */}
+                {/* Text Message */}
                 {msg.message && (
-                  <p className="whitespace-pre-wrap break-words break-all leading-relaxed">
+                  <p className="whitespace-pre-wrap break-words leading-relaxed">
                     {msg.message}
                   </p>
                 )}
 
+                {/* Attachments */}
                 {msg.attachments?.length > 0 && (
                   <div className="mt-2 space-y-2">
                     {msg.attachments.map(file => {
@@ -92,7 +93,7 @@ export default function MessageSection() {
                             width={280}
                             height={200}
                             unoptimized
-                            className="rounded-xl object-cover max-h-[260px]"
+                            className="rounded-xl object-cover max-h-[260px] cursor-pointer hover:opacity-90 transition"
                           />
                         );
                       }
@@ -108,7 +109,7 @@ export default function MessageSection() {
                           key={file.id}
                           href={file.file_url}
                           target="_blank"
-                          className="text-xs underline"
+                          className="flex items-center gap-2 text-xs underline hover:text-blue-500"
                         >
                           📎 {file.name}
                         </a>
@@ -116,14 +117,40 @@ export default function MessageSection() {
                     })}
                   </div>
                 )}
-                {/* Time */}
-                <div className="text-[10px] opacity-70 mt-1 text-right">
-                  {new Date(msg.created_at).toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
+
+                {/* Time + Status */}
+                <div className="flex items-center justify-end gap-1 mt-1 text-[10px] opacity-70">
+                  <span>
+                    {new Date(msg.created_at).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+
+                  {/* Message Status */}
+                  {isMe && (
+                    <span>
+                      {msg.status === 'SENDING' && '⏳'}
+                      {msg.status === 'SENT' && '✓'}
+                      {msg.status === 'DELIVERED' && '✓✓'}
+                      {msg.status === 'SEEN' && (
+                        <span className="text-blue-400">✓✓</span>
+                      )}
+                    </span>
+                  )}
                 </div>
               </div>
+
+              {/* My avatar (optional) */}
+              {isMe && (
+                <Image
+                  src="/images/dashboard/img008.png"
+                  alt="avatar"
+                  width={32}
+                  height={32}
+                  className="rounded-full object-cover"
+                />
+              )}
             </div>
           );
         })}

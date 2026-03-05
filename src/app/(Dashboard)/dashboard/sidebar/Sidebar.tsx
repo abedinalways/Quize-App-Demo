@@ -38,9 +38,24 @@ export default function Sidebar({
 
   const normalizePath = (path: string) => path.replace(/\/+$/, '');
 
+  // const isActive = (href: string) => {
+  //   const currentPath = normalizePath(pathname);
+  //   const targetPath = normalizePath(href);
+
+  //   const exactMatchRoutes = ['/dashboard/admin', '/dashboard/user'];
+  //   if (exactMatchRoutes.includes(targetPath)) {
+  //     return currentPath === targetPath;
+  //   }
+
+  //   return currentPath.startsWith(targetPath);
+  // };
   const isActive = (href: string) => {
     const currentPath = normalizePath(pathname);
     const targetPath = normalizePath(href);
+
+    if (targetPath === '/dashboard/user/messages') {
+      return currentPath.startsWith('/dashboard/user/messages');
+    }
 
     const exactMatchRoutes = ['/dashboard/admin', '/dashboard/user'];
     if (exactMatchRoutes.includes(targetPath)) {

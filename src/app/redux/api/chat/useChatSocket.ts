@@ -5,7 +5,7 @@ import { io, Socket } from 'socket.io-client';
 import { useDispatch } from 'react-redux';
 import { store, type AppDispatch } from '../../store';
 import { chatApi } from './chatApi';
-import type { Message } from './chatApi';
+import type { ChatAttachment, Message } from './chatApi';
 import Cookies from 'js-cookie';
 import { authApi } from '../authApi';
 
@@ -19,7 +19,7 @@ export type SocketMessage = {
       from: string;
       conversation_id: string;
       created_at: string;
-      attachments: Array<File>;
+      attachments: ChatAttachment[];
     };
   };
 };
@@ -115,6 +115,7 @@ export function useChatSocket() {
 
       const me = authApi.endpoints.me.select()(state)?.data;
       console.log('============== me', me);
+      
       const newMessage: Message = {
         id: msg.message_id,
         message: msg.body_text,
@@ -132,7 +133,7 @@ export function useChatSocket() {
           avatar_url: '',
         },
       };
-
+      console.log(newMessage, 'newMessage');
       dispatch(
         chatApi.util.updateQueryData(
           'getMessages',

@@ -16,6 +16,7 @@ import {
   setTyping,
 } from '@/app/redux/api/chat/chatSlice';
 import { skipToken } from '@reduxjs/toolkit/query';
+import { useParams } from 'next/navigation';
 
 interface ChatContextType {
   conversations: Conversation[];
@@ -36,7 +37,11 @@ export const useChat = () => {
 };
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
+  const params = useParams();
+  const conversationIdFromUrl = params?.id as string | undefined;
+
   const dispatch = useDispatch<AppDispatch>();
+
   const { activeConversationId, typing } = useSelector(
     (state: RootState) => state.chat,
   );
@@ -45,45 +50,44 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
   const { data: conversationsData } = useGetConversationsQuery();
 
+  const conversationId = activeConversationId ?? conversationIdFromUrl;
+
   const { data: messagesData } = useGetMessagesQuery(
-    activeConversationId
-      ? { conversationId: activeConversationId, limit: 20 }
-      : skipToken,
+    conversationId ? { conversationId, limit: 20 } : skipToken,
   );
 
   const [sendMessageApi] = useSendMessageMutation();
 
-  // ✅ auto select first conversation
+  // restore redux from URL (refresh safe)
   useEffect(() => {
-    const list = conversationsData?.data ?? [];
-    if (!activeConversationId && list.length > 0) {
-      dispatch(setActiveConversation(list[0].id));
-    }
-  }, [conversationsData, activeConversationId, dispatch]);
+    if (!conversationIdFromUrl) return;
 
-  // ✅ join socket room when conversation changes
+    if (conversationIdFromUrl !== activeConversationId) {
+      dispatch(setActiveConversation(conversationIdFromUrl));
+    }
+  }, [conversationIdFromUrl, activeConversationId, dispatch]);
+
+  // join socket room
   useEffect(() => {
-    console.log('activeConversationId =============== ', activeConversationId);
-    if (!activeConversationId) return;
-    joinConversation(activeConversationId);
-  }, [activeConversationId, joinConversation]);
+    if (!conversationId) return;
+
+    joinConversation(conversationId);
+  }, [conversationId, joinConversation]);
 
   async function sendMessage(text: string, attachments: File[] = []) {
-    if (!activeConversationId) return;
+    if (!conversationId) return;
 
-    const conv = conversationsData?.data?.find(
-      c => c.id === activeConversationId,
-    );
+    const conv = conversationsData?.data?.find(c => c.id === conversationId);
+
     if (!conv) return;
 
     const meId = store.getState().auth?.user?.id;
 
-    // ✅ dynamic receiver id
     const receiverId =
       conv.creator_id === meId ? conv.participant_id : conv.creator_id;
 
     await sendMessageApi({
-      conversationId: activeConversationId,
+      conversationId,
       receiverId,
       message: text,
       attachments,
@@ -95,7 +99,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       value={{
         conversations: conversationsData?.data ?? [],
         messages: messagesData?.data ?? [],
-        activeConversationId,
+        activeConversationId: conversationId ?? null,
         selectConversation: id => dispatch(setActiveConversation(id)),
         sendMessage,
         isTyping: typing,
