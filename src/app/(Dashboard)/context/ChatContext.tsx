@@ -63,6 +63,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
   // ✅ join socket room when conversation changes
   useEffect(() => {
+    console.log('activeConversationId =============== ', activeConversationId);
     if (!activeConversationId) return;
     joinConversation(activeConversationId);
   }, [activeConversationId, joinConversation]);

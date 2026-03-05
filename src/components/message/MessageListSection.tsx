@@ -5,10 +5,12 @@ import { Input } from '../ui/input';
 import { Search } from 'lucide-react';
 import { useChat } from '@/app/(Dashboard)/context/ChatContext';
 import { useRouter } from 'next/navigation';
+import { useMeQuery } from '@/app/redux/api/authApi';
 
 export default function MessageListSection() {
   const { conversations, selectConversation, activeConversationId } = useChat();
   const router = useRouter();
+  const me = useMeQuery();
   return (
     <>
       <h4 className="font-semibold mb-3">All Messages</h4>
@@ -41,7 +43,12 @@ export default function MessageListSection() {
             />
 
             <div className="flex-1">
-              <p className="text-sm font-medium">Conversation {conv.id}</p>
+              <p className="text-sm font-medium">
+                {me.data?.id === conv.participant.id
+                  ? conv.creator.name
+                  : conv.participant.name}
+                -{conv.id}
+              </p>
               <p className="text-xs text-gray-500 truncate">
                 Last message preview
               </p>
