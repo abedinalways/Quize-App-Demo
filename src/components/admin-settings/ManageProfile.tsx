@@ -3,13 +3,12 @@
 import Image from 'next/image';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
+
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
-import Btn from '../reusable/button/Btn';
 import AttachImageIcon from '../reusable/icons/AttachImageIcon';
 
 type ProfileFormData = {

@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ResetPasswordForm from '@/components/auth_components/ResetPasswordForm';
+import { useResetPasswordMutation } from '@/app/redux/api/authApi';
 
 
 const ResetPassword = () => {
@@ -12,7 +13,7 @@ const ResetPassword = () => {
   const searchParams = useSearchParams();
   const email = searchParams.get('email') || '';
   const [isLoading, setIsLoading] = useState(false);
-
+   const [resetPassword] = useResetPasswordMutation();
   const handleResetPassword = async (data: {
     password: string;
     confirmPassword: string;
@@ -20,19 +21,17 @@ const ResetPassword = () => {
     setIsLoading(true);
 
     try {
-     
+      await resetPassword({
+        email,
+        token: searchParams.get('token') || '',
+        password: data.password,
+      }).unwrap();
 
-      toast.success('Password Reset Successful!', {
-        description: 'You can now login with your new password.',
-      });
+      toast.success('Password Reset Successful!');
 
-      setTimeout(() => {
-        router.push('/login');
-      }, 1000);
-    } catch (err) {
-      toast.error('Failed to reset password', {
-        description: 'Something went wrong. Please try again.',
-      });
+      router.push('/login');
+    } catch (err: any) {
+      toast.error(err?.data?.message || 'Reset failed');
     } finally {
       setIsLoading(false);
     }

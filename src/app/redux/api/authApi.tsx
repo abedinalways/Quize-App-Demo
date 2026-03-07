@@ -6,6 +6,36 @@ interface LoginPayload {
   password: string;
 }
 
+interface ForgotPasswordPayload {
+  email: string;
+}
+
+interface ForgotPasswordResponse {
+  message: string;
+  success: boolean;
+}
+
+interface ResetPasswordPayload {
+  email: string;
+  token: string;
+  password: string;
+}
+
+interface ResetPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
+interface VerifyEmailPayload {
+  email: string;
+  token: string;
+}
+
+interface VerifyEmailResponse {
+  message: string;
+  success: boolean;
+}
+
 export const authApi = baseApi.injectEndpoints({
   endpoints: builder => ({
     // 🔹 login
@@ -20,7 +50,6 @@ export const authApi = baseApi.injectEndpoints({
       onQueryStarted: async (arg, { dispatch, queryFulfilled }) => {
         try {
           const { data } = await queryFulfilled;
-          console.log(data);
 
           const {
             authorization: { access_token },
@@ -34,15 +63,48 @@ export const authApi = baseApi.injectEndpoints({
       },
     }),
 
+    // forgot password
+    forgotPassword: builder.mutation<
+      ForgotPasswordResponse,
+      ForgotPasswordPayload
+    >({
+      query: body => ({
+        url: '/auth/forgot-password',
+        method: 'POST',
+        body,
+      }),
+    }),
+
+    // 🔹 verify email
+    verifyEmail: builder.mutation<VerifyEmailResponse, VerifyEmailPayload>({
+      query: body => ({
+        url: '/auth/resend-verification-email',
+        method: 'POST',
+        body,
+      }),
+    }),
+
+    // 🔹 reset password
+    resetPassword: builder.mutation<
+      ResetPasswordResponse,
+      ResetPasswordPayload
+    >({
+      query: body => ({
+        url: '/auth/reset-password',
+        method: 'POST',
+        body,
+      }),
+    }),
+
     // 🔹 get logged-in user
     me: builder.query<AuthUser, void>({
       query: () => ({
         url: '/profile',
         method: 'GET',
-        // credentials: 'include',
       }),
       transformResponse: (res: { data: AuthUser }) => res.data,
     }),
+
     // 🔹 logout
     logout: builder.mutation<void, void>({
       query: () => ({
@@ -55,4 +117,11 @@ export const authApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useLoginMutation, useMeQuery, useLogoutMutation } = authApi;
+export const {
+  useLoginMutation,
+  useVerifyEmailMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
+  useMeQuery,
+  useLogoutMutation,
+} = authApi;

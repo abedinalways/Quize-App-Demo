@@ -13,15 +13,15 @@ export default function MessageListSection() {
   const me = useMeQuery();
   return (
     <>
-      <h4 className="font-semibold mb-3">All Messages</h4>
+      <h4 className=" mb-3 text-green-900 font-semibold">All Messages</h4>
 
-      <div className="relative mb-4">
+      {/* <div className="relative mb-4">
         <Search
           className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
           size={16}
         />
         <Input placeholder="Search messages..." className="pl-9" />
-      </div>
+      </div> */}
 
       <div className="space-y-3">
         {conversations.map(conv => (

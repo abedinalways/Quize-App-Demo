@@ -87,7 +87,7 @@ export const userMenu: MenuItem[] = [
   },
   {
     title: 'Reset Bank',
-    href: '',
+    href: '/dashboard/user/reset-bank',
     icon: '/images/dashboard/img06.png',
   },
   {

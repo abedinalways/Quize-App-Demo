@@ -38,7 +38,7 @@ export const helpApi = baseApi.injectEndpoints({
       UpdateHelpResponse,
       { id: string; body: Partial<HelpData> }
     >({
-      query: ({ id, body }) => ({
+      query: ({  body }) => ({
         url: `/admin/help`,
         method: 'PATCH',
         body,

@@ -6,6 +6,7 @@ import { useChat } from '@/app/(Dashboard)/context/ChatContext';
 import { useSelector } from 'react-redux';
 import { AudioBubble } from './AudioBubble';
 import { useMeQuery } from '@/app/redux/api/authApi';
+import { FileIcon } from 'lucide-react';
 
 interface AuthState {
   user?: { id: string };
@@ -111,7 +112,8 @@ export default function MessageSection() {
                           target="_blank"
                           className="flex items-center gap-2 text-xs underline hover:text-blue-500"
                         >
-                          📎 {file.name}
+                          <FileIcon className="w-4 h-4 text-gray-400" />
+                          {file.name}
                         </a>
                       );
                     })}

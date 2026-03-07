@@ -5,28 +5,34 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { useRouter, useSearchParams } from 'next/navigation';
 import VerifyOtpForm from '@/components/auth_components/VerifyOtpForm';
-
+import { useVerifyEmailMutation } from '@/app/redux/api/authApi';
 
 const VerifyOtp = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get('email') || '';
   const [isLoading, setIsLoading] = useState(false);
-
+  const [verifyEmail] = useVerifyEmailMutation();
   const handleVerifyOtp = async (otp?: string) => {
+    if (!otp) return;
+
     setIsLoading(true);
 
     try {
+      await verifyEmail({
+        email,
+        token: otp,
+      }).unwrap();
+
       toast.success('OTP Verified!', {
         description: 'You can now reset your password.',
       });
 
-      setTimeout(() => {
-        router.push(`/reset-password?email=${encodeURIComponent(email)}`);
-      }, 800);
-    } catch {
+      router.push(`/reset-password?email=${encodeURIComponent(email)}`);
+    } catch (err: unknown) {
+      const error = err as { data?: { message?: string } };
       toast.error('Invalid OTP', {
-        description: 'Please check and try again.',
+        description: error?.data?.message || 'Verification failed',
       });
     } finally {
       setIsLoading(false);

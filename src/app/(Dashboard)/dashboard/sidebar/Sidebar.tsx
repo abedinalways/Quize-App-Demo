@@ -1,13 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { adminMenu, userMenu, MenuItem } from './sidebarItems';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
 import OmsLogo from '@/components/reusable/icons/OmsLogo';
 import Cookies from 'js-cookie';
+
+import ResetBankModal from '@/components/reset-bank/ResetModal';
+
 
 interface SidebarProps {
   open?: boolean;
@@ -23,9 +26,10 @@ export default function Sidebar({
   const pathname = usePathname();
   const router = useRouter();
 
-  // ✅ Get role from cookie (NO API CALL)
   const role = Cookies.get('role');
   const menu: MenuItem[] = role === 'admin' ? adminMenu : userMenu;
+
+  const [openResetModal, setOpenResetModal] = useState(false);
 
   useEffect(() => {
     if (mobile && open) document.body.style.overflow = 'hidden';
@@ -38,17 +42,6 @@ export default function Sidebar({
 
   const normalizePath = (path: string) => path.replace(/\/+$/, '');
 
-  // const isActive = (href: string) => {
-  //   const currentPath = normalizePath(pathname);
-  //   const targetPath = normalizePath(href);
-
-  //   const exactMatchRoutes = ['/dashboard/admin', '/dashboard/user'];
-  //   if (exactMatchRoutes.includes(targetPath)) {
-  //     return currentPath === targetPath;
-  //   }
-
-  //   return currentPath.startsWith(targetPath);
-  // };
   const isActive = (href: string) => {
     const currentPath = normalizePath(pathname);
     const targetPath = normalizePath(href);
@@ -72,6 +65,24 @@ export default function Sidebar({
   };
 
   const renderMenuItem = (item: MenuItem) => {
+    // RESET BANK ACTION
+    if (item.title === 'Reset Bank') {
+      return (
+        <button
+          key={item.title}
+          onClick={() => {
+            setOpenResetModal(true);
+            if (mobile) setOpen?.(false);
+          }}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all cursor-pointer hover:bg-[#B79E6B] hover:text-white w-full text-left"
+        >
+          <Image src={item.icon} width={18} height={18} alt={item.title} />
+          <span className="text-sm">{item.title}</span>
+        </button>
+      );
+    }
+
+    // LOGOUT
     if (item.title === 'Logout') {
       return (
         <button
@@ -85,6 +96,7 @@ export default function Sidebar({
       );
     }
 
+    // NORMAL LINK
     return (
       <Link
         key={item.href}
@@ -103,47 +115,60 @@ export default function Sidebar({
     );
   };
 
-  /* DESKTOP */
+  /* ================= DESKTOP ================= */
+
   if (!mobile) {
     return (
-      <aside className="w-55 background border-r flex flex-col text-white font-[manrope] overflow-y-auto min-h-screen">
-        <div className="p-4">
-          <Link href="/">
-            <div className="flex items-center gap-2 mb-6">
-              <Image
-                src="/images/navbar-logo.png"
-                width={40}
-                height={40}
-                alt="Logo"
-              />
-              <h1 className="relative font-bold text-lg sm:text-xl lg:text-3xl text-white font-[manrope] mb-4">
-                <div className="flex items-center justify-center gap-1">
-                  Table
-                  <OmsLogo />
-                </div>
-                <span className="absolute top-6">Rounds</span>
-              </h1>
-            </div>
-          </Link>
-
-          <nav className="flex flex-col gap-1">
-            {menu.map(item => (
-              <div key={item.href || item.title}>
-                {item.section && (
-                  <p className="mt-4 mb-1 text-xs uppercase text-gray-300 font-semibold">
-                    {item.section}
-                  </p>
-                )}
-                {renderMenuItem(item)}
+      <>
+        <aside className="w-55 background border-r flex flex-col text-white font-[manrope] overflow-y-auto min-h-screen">
+          <div className="p-4">
+            <Link href="/">
+              <div className="flex items-center gap-2 mb-6">
+                <Image
+                  src="/images/navbar-logo.png"
+                  width={40}
+                  height={40}
+                  alt="Logo"
+                />
+                <h1 className="relative font-bold text-lg sm:text-xl lg:text-3xl text-white font-[manrope] mb-4">
+                  <div className="flex items-center justify-center gap-1">
+                    Table
+                    <OmsLogo />
+                  </div>
+                  <span className="absolute top-6">Rounds</span>
+                </h1>
               </div>
-            ))}
-          </nav>
-        </div>
-      </aside>
+            </Link>
+
+            <nav className="flex flex-col gap-1">
+              {menu.map(item => (
+                <div key={item.href || item.title}>
+                  {item.section && (
+                    <p className="mt-4 mb-1 text-xs uppercase text-gray-300 font-semibold">
+                      {item.section}
+                    </p>
+                  )}
+                  {renderMenuItem(item)}
+                </div>
+              ))}
+            </nav>
+          </div>
+        </aside>
+
+        {/* RESET BANK MODAL */}
+        <ResetBankModal
+          open={openResetModal}
+          onClose={() => setOpenResetModal(false)}
+          onConfirm={() => {
+            console.log('Reset confirmed');
+          }}
+        />
+      </>
     );
   }
 
-  /* MOBILE */
+  /* ================= MOBILE ================= */
+
   return (
     <>
       {open && (
@@ -174,6 +199,15 @@ export default function Sidebar({
           </nav>
         </div>
       </aside>
+
+      {/* RESET BANK MODAL */}
+      <ResetBankModal
+        open={openResetModal}
+        onClose={() => setOpenResetModal(false)}
+        onConfirm={() => {
+          console.log('Reset confirmed');
+        }}
+      />
     </>
   );
 }
