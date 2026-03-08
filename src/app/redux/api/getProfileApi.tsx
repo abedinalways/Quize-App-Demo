@@ -96,11 +96,12 @@ export const getProfileApi = baseApi.injectEndpoints({
     getProfileData: builder.query<ProfileData, string>({
       query: userid => ({
         url: '/profile',
-        params: { user_id: userid },
+        // params: { user_id: userid },
+        params: userid ? { user_id: userid } : {},
         method: 'GET',
         credentials: 'include',
       }),
-      
+      transformResponse: (response: ProfileResponse) => response.data,
       providesTags: ['Profile'],
     }),
 

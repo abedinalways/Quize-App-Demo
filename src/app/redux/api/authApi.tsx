@@ -28,7 +28,7 @@ interface ResetPasswordResponse {
 
 interface VerifyEmailPayload {
   email: string;
-  token: string;
+  
 }
 
 interface VerifyEmailResponse {
@@ -76,7 +76,10 @@ export const authApi = baseApi.injectEndpoints({
     }),
 
     // 🔹 verify email
-    verifyEmail: builder.mutation<VerifyEmailResponse, VerifyEmailPayload>({
+    resendVerificationEmail: builder.mutation<
+      VerifyEmailResponse,
+      VerifyEmailPayload
+    >({
       query: body => ({
         url: '/auth/resend-verification-email',
         method: 'POST',
@@ -94,6 +97,19 @@ export const authApi = baseApi.injectEndpoints({
         method: 'POST',
         body,
       }),
+    }),
+
+    // 🔹 update profile / password
+    updateUser: builder.mutation<
+      { success: boolean; message: string },
+      FormData
+    >({
+      query: body => ({
+        url: '/auth/update',
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: ['Auth'],
     }),
 
     // 🔹 get logged-in user
@@ -119,9 +135,10 @@ export const authApi = baseApi.injectEndpoints({
 
 export const {
   useLoginMutation,
-  useVerifyEmailMutation,
+  useResendVerificationEmailMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
+  useUpdateUserMutation,
   useMeQuery,
   useLogoutMutation,
 } = authApi;

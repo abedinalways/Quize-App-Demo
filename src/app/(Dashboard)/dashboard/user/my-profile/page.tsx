@@ -4,19 +4,17 @@ import { useState } from 'react';
 import { ProfileTab } from '@/types/myProfile';
 import ProfileTabs from '@/components/my-profile/ProfileTabs';
 import ManageProfile from '@/components/settings/ManageProfile';
-import { useGetProfileDataQuery } from '@/app/redux/api/getProfileApi';
+import { useMeQuery } from '@/app/redux/api/authApi';
 import { mapProfileToUI } from '@/utils/profileMapper';
 
 export default function MyProfilePage() {
   const [activeTab, setActiveTab] = useState<ProfileTab>('overview');
 
-  const { data, isLoading } = useGetProfileDataQuery();
+  const { data, isLoading } = useMeQuery();
 
-  
   if (isLoading || !data) return null;
 
-  
-  const profileUI = mapProfileToUI(data);
+  const profileUI = mapProfileToUI(data as any);
 
   return (
     <div className="font-[manrope]">
@@ -24,6 +22,7 @@ export default function MyProfilePage() {
         <h2 className="text-[#01281e] text-[32px] md:text-[48px] font-bold">
           My Profile
         </h2>
+
         <p className="md:text-[18px] font-normal text-[#6b7280]">
           Manage your professional profile
         </p>

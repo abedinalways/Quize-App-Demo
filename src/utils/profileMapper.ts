@@ -7,29 +7,32 @@ import {
 } from '@/app/redux/api/getProfileApi';
 
 import { ProfileData as ProfileUIData } from '@/types/myProfile';
+/* ---------- UPDATE IN profileMapper.ts ---------- */
 
 export function mapProfileToUI(data: ProfileData): ProfileUIData {
   return {
     user: {
-      name: data.name,
-      details: data.bio,
-      title: data.credentials,
-      avatar: data.avatar,
-      location: data.address,
-      jobArea: data.current_practice,
-      joiningDate: data.training_practice,
-      followers: data.followers,
-      following: data.followings,
+      id: data.id, // Ensure id is mapped to fix UserProfile type errors
+      name: data.name || '',
+      details: data.bio || '',
+      title: data.credentials || '',
+      avatar: data.avatar || '',
+      location: data.address || '',
+      jobArea: data.current_practice || '',
+      joiningDate: data.training_practice || '',
+      followers: data.followers || 0,
+      following: data.followings || 0,
     },
 
-    education: data.educations.map((edu: Education) => ({
+    // Safely handle potential undefined arrays
+    education: (data.educations ?? []).map((edu: Education) => ({
       title: edu.degree,
       institute: edu.institute,
       degree: edu.description,
       year: edu.year,
     })),
 
-    experience: data.experiences.map((exp: Experience) => ({
+    experience: (data.experiences ?? []).map((exp: Experience) => ({
       role: exp.position,
       hospital: exp.company,
       location: exp.location,
@@ -37,14 +40,14 @@ export function mapProfileToUI(data: ProfileData): ProfileUIData {
       description: '',
     })),
 
-    publications: data.publications.map((pub: Publication) => ({
+    publications: (data.publications ?? []).map((pub: Publication) => ({
       title: pub.title,
       year: pub.year,
       author: pub.topic,
       articleLink: pub.link,
     })),
 
-    skills: data.skills.map((skill: Skill) => skill.name),
+    skills: (data.skills ?? []).map((skill: Skill) => skill.name),
 
     questionBank: {
       completion: 0,

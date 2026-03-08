@@ -11,6 +11,12 @@ export interface AuthUser {
   avatar: string;
   followers: string;
   followings: string;
+  instagram: string;
+  linkedin: string;
+  twitter_x: string;
+  facebook: string;
+  bio: string;
+  join_date: string;
   type: 'admin' | 'user';
 }
 export interface AuthorizationResponse {

@@ -10,7 +10,7 @@ import { FaXTwitter } from 'react-icons/fa6';
 import CalendarIconForProfile from '../reusable/icons/CalendarIconForProfile';
 import { Facebook, Instagram, Linkedin } from 'lucide-react';
 import FollowersFollowingModal from '../my-profile/FollowersFollowingModal';
-import Link from 'next/link';
+
 import { useRouter } from 'next/navigation';
 import { useCreateConversationMutation } from '@/app/redux/api/chat/chatApi';
 

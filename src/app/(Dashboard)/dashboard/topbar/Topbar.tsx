@@ -36,13 +36,13 @@ export default function Topbar({ onMenuClick }: TopbarProps = {}) {
 
       <div className="flex items-center gap-3 ml-auto">
         <NotificationButton />
-
+{/* 
         <Image
           src="/images/dashboard/topbar/message.png"
           width={20}
           height={20}
           alt="Messages"
-        />
+        /> */}
 
         {/* <Link href={profileHref}> */}
         <Image
