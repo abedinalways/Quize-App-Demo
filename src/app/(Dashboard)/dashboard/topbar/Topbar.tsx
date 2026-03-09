@@ -2,9 +2,7 @@
 
 import Image from 'next/image';
 import { Menu } from 'lucide-react';
-
 import { NotificationButton } from '@/components/topbar/NotificationButton';
-
 import { useMeQuery } from '@/app/redux/api/authApi';
 
 interface TopbarProps {
@@ -12,16 +10,7 @@ interface TopbarProps {
 }
 
 export default function Topbar({ onMenuClick }: TopbarProps = {}) {
-  // const user = useAppSelector(state => state.auth.user);
-  // const role = user?.role;
-
-  const { data: user, error } = useMeQuery();
-  console.log('====== useMe', user?.id);
-
-  // const profileHref =
-  //   role === 'admin'
-  //     ? '/dashboard/admin/manage-settings'
-  //     : '/dashboard/my-profile';
+  const { data: user } = useMeQuery();
 
   return (
     <header className="sticky top-0 z-1000 bg-white border-b flex items-center justify-between gap-3 px-4 sm:px-6 h-15">
@@ -36,15 +25,6 @@ export default function Topbar({ onMenuClick }: TopbarProps = {}) {
 
       <div className="flex items-center gap-3 ml-auto">
         <NotificationButton />
-{/* 
-        <Image
-          src="/images/dashboard/topbar/message.png"
-          width={20}
-          height={20}
-          alt="Messages"
-        /> */}
-
-        {/* <Link href={profileHref}> */}
         <Image
           src={user?.avatar || '/images/default-avatar.png'}
           width={36}
@@ -52,8 +32,6 @@ export default function Topbar({ onMenuClick }: TopbarProps = {}) {
           alt=""
           className="rounded-full"
         />
-        {/* </Link> */}
-
         <span className="hidden sm:block font-semibold text-gray-700">
           {user?.name}
         </span>

@@ -48,12 +48,11 @@ export default function MessageSection() {
             >
               {/* Avatar */}
               {!isMe && (
-                <Image
-                  src="/images/dashboard/img008.png"
-                  alt="avatar"
-                  width={32}
-                  height={32}
-                  className="rounded-full object-cover"
+                <img
+                  width="24"
+                  height="24"
+                  src="https://img.icons8.com/color/24/google-contacts.png"
+                  alt="google-contacts"
                 />
               )}
 
@@ -145,12 +144,11 @@ export default function MessageSection() {
 
               {/* My avatar (optional) */}
               {isMe && (
-                <Image
-                  src="/images/dashboard/img008.png"
-                  alt="avatar"
-                  width={32}
-                  height={32}
-                  className="rounded-full object-cover"
+                <img
+                  width="24"
+                  height="24"
+                  src="https://img.icons8.com/color/24/google-contacts.png"
+                  alt="google-contacts"
                 />
               )}
             </div>

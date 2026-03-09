@@ -1,8 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import { Input } from '../ui/input';
-import { Search } from 'lucide-react';
+// import { Input } from '../ui/input';
+// import { Search } from 'lucide-react';
 import { useChat } from '@/app/(Dashboard)/context/ChatContext';
 import { useRouter } from 'next/navigation';
 import { useMeQuery } from '@/app/redux/api/authApi';
@@ -11,6 +11,7 @@ export default function MessageListSection() {
   const { conversations, selectConversation, activeConversationId } = useChat();
   const router = useRouter();
   const me = useMeQuery();
+  // console.log(conversations[0].messages[0].message,'llllllllldscdsasdaaaaaa============')
   return (
     <>
       <h4 className=" mb-3 text-green-900 font-semibold">All Messages</h4>
@@ -45,15 +46,18 @@ export default function MessageListSection() {
               className="rounded-full"
             />
 
-            <div className="flex-1">
+            <div className="flex-1 truncate">
               <p className="text-sm font-medium">
                 {me.data?.id === conv.participant.id
                   ? conv.creator.name
                   : conv.participant.name}
-                -{conv.id}
+                {/* -{conv.id} */}
               </p>
-              <p className="text-xs text-gray-500 truncate">
-                Last message preview
+              <p className="text-xs text-gray-500 truncate overflow-x-hidden">
+               
+                {conv.messages && conv.messages.length > 0
+                  ? conv.messages[conv.messages.length - 1].message
+                  : 'No messages yet'}
               </p>
             </div>
           </div>

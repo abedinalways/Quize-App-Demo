@@ -19,7 +19,7 @@ export default function Header() {
   const activeConversation = conversations.find(
     conv => conv.id === activeConversationId,
   );
-
+  console.log(activeConversation, 'llllllllldscdsasdaaaaaa============')
   if (!activeConversation) return null;
 
   return (
@@ -28,7 +28,8 @@ export default function Header() {
         {/* Left Section */}
         <div className="flex items-center gap-4">
           <Image
-            src="/images/dashboard/main_dashboard/doctor.png"
+            src={activeConversation?.avatar_url ?? '/images/dashboard/main_dashboard/doctor.png'
+            }
             width={90}
             height={90}
             alt="doctor"

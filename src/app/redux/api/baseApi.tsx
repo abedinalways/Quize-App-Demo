@@ -25,6 +25,7 @@ export const baseApi = createApi({
     'Chat',
     'allQuestions',
     'help',
+    'notification',
   ],
   endpoints: () => ({}),
 });
