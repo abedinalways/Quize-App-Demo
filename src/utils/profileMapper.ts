@@ -7,12 +7,12 @@ import {
 } from '@/app/redux/api/getProfileApi';
 
 import { ProfileData as ProfileUIData } from '@/types/myProfile';
-/* ---------- UPDATE IN profileMapper.ts ---------- */
+
 
 export function mapProfileToUI(data: ProfileData): ProfileUIData {
   return {
     user: {
-      id: data.id, // Ensure id is mapped to fix UserProfile type errors
+      id: data.id,
       name: data.name || '',
       details: data.bio || '',
       title: data.credentials || '',
@@ -22,6 +22,13 @@ export function mapProfileToUI(data: ProfileData): ProfileUIData {
       joiningDate: data.training_practice || '',
       followers: data.followers || 0,
       following: data.followings || 0,
+      credentials: data.credentials ?? '',
+      year: data.educations?.[0]?.year ?? '',
+      instagram: data.instagram ?? '',
+      linkedin: data.linkedin ?? '',
+      twitter: data.twitter_x ?? '',
+      facebook: data.facebook ?? '',
+      practiceName: data.current_practice ?? '',
     },
 
     // Safely handle potential undefined arrays

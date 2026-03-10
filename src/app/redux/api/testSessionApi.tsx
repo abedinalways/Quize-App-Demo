@@ -44,7 +44,18 @@ export const testSessionApi = baseApi.injectEndpoints({
       }),
     }),
 
-    
+    completeTest: builder.mutation<
+      { success: boolean; message: string },
+      { test_id: string }
+    >({
+      query: body => ({
+        url: '/test/complete',
+        method: 'PATCH',
+        body,
+        credentials: 'include',
+      }),
+    }),
+
     getTestResult: builder.query<
       TestResultResponse,
       { test_id: string; question_id: string }
@@ -57,7 +68,6 @@ export const testSessionApi = baseApi.injectEndpoints({
       }),
     }),
   }),
-  overrideExisting: false,
 });
 
 export const {
@@ -65,4 +75,5 @@ export const {
   useToggleMarkMutation,
   useSkipQuestionMutation,
   useLazyGetTestResultQuery,
+  useCompleteTestMutation,
 } = testSessionApi;

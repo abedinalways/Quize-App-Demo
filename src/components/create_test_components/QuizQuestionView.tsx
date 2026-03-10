@@ -50,6 +50,16 @@ const QuizQuestionView: React.FC<QuizQuestionViewProps> = ({
   
   const [selectedAnswerId, setSelectedAnswer] = useState<string | null>(null);
   const [showExplanation, setShowExplanation] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (quizDetails.userAnswerId) {
+      setSelectedAnswer(quizDetails.userAnswerId);
+    } else {
+      setSelectedAnswer(null);
+    }
+
+    setShowExplanation(Boolean(quizDetails.correctAnswerId));
+  }, [questionID]);
   const [isQuestionHidden, setIsQuestionHidden] = useState<boolean>(false);
   const [zoomLevel, setZoomLevel] = useState<number>(1);
 

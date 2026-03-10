@@ -83,12 +83,32 @@ export function CreateTestContent() {
 
       const res = await startTest(payload).unwrap();
 
-      const testSession = {
-        id: res.data.id,
-        total_questions: res.data.total_questions,
-        questions: res.data.questions,
-      };
+      // const testSession = {
+      //   id: res.data.id,
+      //   total_questions: res.data.total_questions,
+      //   questions: res.data.questions,
+      // };
+       const testSession = {
+         id: res.data.id,
+         total_questions: res.data.total_questions,
+         questions: res.data.questions.map((q: any) => ({
+           questionID: q.id,
 
+           quizDetails: {
+             question_title: q.question_title,
+             question_steam: q.question_steam,
+             answerOptions: q.answerOptions.map((opt: any) => ({
+               id: opt.id,
+               option_text: opt.option_text,
+               percentage: 0,
+             })),
+
+             correctAnswerId: null,
+             userAnswerId: null,
+             explanation: null,
+           },
+         })),
+       };
       sessionStorage.setItem(
         `TEST_SESSION_${res.data.id}`,
         JSON.stringify(testSession),
@@ -228,8 +248,7 @@ export function CreateTestContent() {
           <button
             onClick={handleStartTest}
             disabled={isLoading}
-            className="bg-[#01503b] text-white px-6 py-3 rounded-[8px] cursor-pointer"
-          >
+            className="bg-[#01503b] text-white px-6 py-3 rounded-[8px] cursor-pointer">
             {isLoading ? 'Starting...' : 'Start Test'}
           </button>
         </div>

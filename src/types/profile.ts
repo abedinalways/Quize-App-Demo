@@ -10,6 +10,13 @@ export interface UserProfile {
   joiningDate: string;
   followers: number;
   following: number;
+  credentials: string;
+  year: string;
+  instagram: string;
+  linkedin: string;
+  twitter: string;
+  facebook: string;
+  practiceName: string;
 }
 
 export interface EducationItem {
@@ -41,6 +48,7 @@ export interface ProfileData {
   publications: PublicationItem[];
   skills: string[];
   questionBank: QuestionBankStats;
+  practiceName: string;
 }
 export interface QuestionBankStats {
   completion: number; 

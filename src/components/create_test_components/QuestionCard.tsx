@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils';
 import { CircularProgress } from '../progress-10';
 import CorrectIcon from '../reusable/icons/CorrectIcon';
 import WrongIcon from '../reusable/icons/WrongIcon';
+import { useCompleteTestMutation } from '@/app/redux/api/testSessionApi';
+import { useRouter } from 'next/navigation';
 
 interface QuestionCardProps {
   quizDetails: QuizDetailsUI;
@@ -29,9 +31,20 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
   onSubmit,
   onToggleHide,
   isQuestionHidden,
-  
+  testId
 }) => {
-  console.log(quizDetails);
+  console.log(quizDetails, 'l====================================================osadfpof');
+  const [completeTest] = useCompleteTestMutation();
+  const router = useRouter();
+  const handleSubmitTest = async () => {
+    try {
+      await completeTest({ test_id: testId }).unwrap();
+
+      router.push(`/dashboard/user/test-result/${testId}`);
+    } catch (err) {
+      console.error('Submit test failed', err);
+    }
+  };
   return (
     <div className="w-full bg-[#f9f9f5] md:my-8 md:p-[32px] rounded-[16px]">
       {showExplanation && (
@@ -159,10 +172,12 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
           />
 
           {/* Submit Test should be handled by parent, not hardcoded */}
-          <Btn
-            text="Submit Test"
-            className="bg-[#b79e6b] text-sm w-full md:w-[164px] h-[50px] text-white font-semibold"
-          />
+          <button
+            onClick={handleSubmitTest}
+            className="bg-[#b79e6b] text-sm w-full md:w-[164px] h-[50px] text-white font-semibold rounded-md"
+          >
+            Submit Test
+          </button>
         </div>
       </CardContent>
     </div>
