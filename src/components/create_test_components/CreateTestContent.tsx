@@ -16,28 +16,30 @@ import { Switch } from '../ui/CustomSwitch';
 
 import { useStartTestMutation } from '@/app/redux/api/startTestApi';
 
-const TOPICS: string[] = [
-  'Anesthesia/Medicine',
-  'Dentoalveolar',
-  'Reconstruction',
-  'Cancer',
-  'Implants',
-  'TMJ',
-  'Cleft/Craniofacial',
-  'Orthognathic',
-  'Trauma',
-  'Cosmetics',
-  'Pathology',
-];
+const TOPICS = [
+  { label: 'Anesthesia/Medicine', value: 'Anesthesia_Medicine' },
+  { label: 'Dentoalveolar', value: 'Dentoalveolar' },
+  { label: 'Reconstruction', value: 'Reconstruction' },
+  { label: 'Cancer', value: 'Cancer' },
+  { label: 'Implants', value: 'Implants' },
+  { label: 'TMJ', value: 'TMJ' },
+  { label: 'Cleft/Craniofacial', value: 'Cleft_Craniofacial' },
+  { label: 'Orthognathic', value: 'Orthognathic' },
+  { label: 'Trauma', value: 'Trauma' },
+  { label: 'Cosmetics', value: 'Cosmetics' },
+  { label: 'Pathology', value: 'Pathology' },
+] as const;
 
-const DIFFICULTY_LEVELS = ['Intern', 'Senior', 'Boards'] as const;
+const DIFFICULTY_LEVELS = ['Intern', 'Senior', 'Board'] as const;
 
 type DifficultyLevel = (typeof DIFFICULTY_LEVELS)[number];
 
 export function CreateTestContent() {
   const router = useRouter();
 
-  const [selectedTopics, setSelectedTopics] = useState<string[]>(TOPICS);
+  const [selectedTopics, setSelectedTopics] = useState<string[]>(
+    TOPICS.map(topic => topic.value),
+  );
   const [testMode, setTestMode] = useState<'Timed' | 'Untimed'>('Untimed');
   const [selectedDifficulty, setSelectedDifficulty] =
     useState<DifficultyLevel>('Intern');
@@ -47,9 +49,13 @@ export function CreateTestContent() {
 
   const [startTest, { isLoading }] = useStartTestMutation();
 
-  const handleTopicToggle = (topic: string, checked: boolean) => {
+  const handleTopicToggle = (topicValue: string, checked: boolean) => {
     setSelectedTopics(prev =>
-      checked ? [...prev, topic] : prev.filter(t => t !== topic),
+      checked
+        ? prev.includes(topicValue)
+          ? prev
+          : [...prev, topicValue]
+        : prev.filter(t => t !== topicValue),
     );
   };
 
@@ -69,46 +75,39 @@ export function CreateTestContent() {
 
       const payload = {
         total_questions: Number(numQuestions),
-
         test_mode: selectedStatus
           .filter(s => s === 'Used' || s === 'Unused')
           .map(s => s.toLowerCase()),
-
         difficulty: selectedDifficulty,
-
-        topic: selectedTopics.map(t =>
-          t.replace('/', '_').replace(/\s+/g, '_'),
-        ),
+        topic: selectedTopics,
       };
 
       const res = await startTest(payload).unwrap();
 
-      // const testSession = {
-      //   id: res.data.id,
-      //   total_questions: res.data.total_questions,
-      //   questions: res.data.questions,
-      // };
-       const testSession = {
-         id: res.data.id,
-         total_questions: res.data.total_questions,
-         questions: res.data.questions.map((q: any) => ({
-           questionID: q.id,
+      const testSession = {
+        id: res.data.id,
+        total_questions: res.data.total_questions,
+        questions: res.data.questions.map((q, index) => ({
+          testProgress: {
+            questionID: q.id,
+            totalQuestions: res.data.total_questions,
+            currentQuestion: index + 1,
+          },
+          quizDetails: {
+            question_title: q.question_title,
+            question_steam: q.question_steam,
+            answerOptions: q.answerOptions.map(opt => ({
+              id: opt.id,
+              option_text: opt.option_text,
+              percentage: 0,
+            })),
+            correctAnswerId: null,
+            userAnswerId: null,
+            explanation: null,
+          },
+        })),
+      };
 
-           quizDetails: {
-             question_title: q.question_title,
-             question_steam: q.question_steam,
-             answerOptions: q.answerOptions.map((opt: any) => ({
-               id: opt.id,
-               option_text: opt.option_text,
-               percentage: 0,
-             })),
-
-             correctAnswerId: null,
-             userAnswerId: null,
-             explanation: null,
-           },
-         })),
-       };
       sessionStorage.setItem(
         `TEST_SESSION_${res.data.id}`,
         JSON.stringify(testSession),
@@ -133,7 +132,6 @@ export function CreateTestContent() {
       </p>
 
       <div className="space-y-4 w-[280px] md:w-[720px] xl:w-[914px]">
-        {/* Question Count */}
         <div className="space-y-4 bg-white p-4 rounded-[12px] border border-[#e9e9e9] custom-shadow">
           <h3 className="text-xl md:text-2xl text-[#444950] font-bold">
             Question Count
@@ -153,7 +151,6 @@ export function CreateTestContent() {
           </Select>
         </div>
 
-        {/* Test Mode */}
         <div className="space-y-4 bg-white p-4 rounded-[12px] border border-[#e9e9e9] custom-shadow">
           <h3 className="text-xl md:text-2xl text-[#444950] font-bold">
             Test Mode
@@ -191,7 +188,6 @@ export function CreateTestContent() {
           </div>
         </div>
 
-        {/* Difficulty */}
         <div className="space-y-4 bg-white p-4 rounded-[12px] border border-[#e9e9e9] custom-shadow">
           <h3 className="text-xl md:text-[24px] font-bold text-[#444950]">
             Difficulty
@@ -215,7 +211,6 @@ export function CreateTestContent() {
           </div>
         </div>
 
-        {/* Topics */}
         <div className="space-y-4 bg-white p-4 rounded-[12px] border border-[#e9e9e9] custom-shadow">
           <h3 className="text-xl md:text-[24px] font-bold text-[#444950]">
             Topic
@@ -223,32 +218,32 @@ export function CreateTestContent() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {TOPICS.map(topic => {
-              const isSelected = selectedTopics.includes(topic);
+              const isSelected = selectedTopics.includes(topic.value);
 
               return (
                 <div
-                  key={topic}
+                  key={topic.value}
                   className={`flex items-center gap-2 p-3 rounded-md border cursor-pointer ${
                     isSelected
                       ? 'bg-[#f7f7f3] border-gray-400'
                       : 'hover:bg-gray-50'
                   }`}
-                  onClick={() => handleTopicToggle(topic, !isSelected)}
+                  onClick={() => handleTopicToggle(topic.value, !isSelected)}
                 >
                   <CustomCheckbox checked={isSelected} />
-                  <Label>{topic}</Label>
+                  <Label>{topic.label}</Label>
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* Start Button */}
         <div className="pt-4">
           <button
             onClick={handleStartTest}
             disabled={isLoading}
-            className="bg-[#01503b] text-white px-6 py-3 rounded-[8px] cursor-pointer">
+            className="bg-[#01503b] text-white px-6 py-3 rounded-[8px] cursor-pointer"
+          >
             {isLoading ? 'Starting...' : 'Start Test'}
           </button>
         </div>

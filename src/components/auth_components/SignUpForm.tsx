@@ -24,7 +24,8 @@ import Link from 'next/link';
 import { Country, State } from 'country-state-city';
 
 import { toast } from 'sonner';
-import { useRegisterNewUserMutation } from '@/app/redux/api/registerApi';
+
+
 
 interface SignUpFormData {
   fullName: string;
@@ -47,11 +48,17 @@ interface SignUpFormData {
 }
 
 interface SignUpFormProps {
-  onSubmit?: (data: SignUpFormData) => void;
+  onSubmit?: (data: any) => Promise<void> | void;
   onCancel?: () => void;
+  isLoading?: boolean;
 }
 
-export default function SignUpForm({ onSubmit, onCancel }: SignUpFormProps) {
+export default function SignUpForm({
+  onSubmit,
+  onCancel,
+  
+  isLoading = false,
+}: SignUpFormProps) {
   const [formData, setFormData] = useState<SignUpFormData>({
     fullName: '',
     credentials: '',
@@ -71,7 +78,7 @@ export default function SignUpForm({ onSubmit, onCancel }: SignUpFormProps) {
     facebookUrl: '',
     agreeToTerms: false,
   });
-  const [registerUser, { isLoading }] = useRegisterNewUserMutation();
+  // const [registerUser, { isLoading }] = useRegisterNewUserMutation();
 
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
   const [verificationDoc, setVerificationDoc] = useState<File | null>(null);
@@ -81,7 +88,7 @@ export default function SignUpForm({ onSubmit, onCancel }: SignUpFormProps) {
 
   const handleInputChange = (
     field: keyof SignUpFormData,
-    value: string | boolean
+    value: string | boolean,
   ) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
@@ -121,59 +128,49 @@ export default function SignUpForm({ onSubmit, onCancel }: SignUpFormProps) {
     if (!formData.specialty.trim())
       newErrors.specialty = 'Specialty is required';
 
-    if (!formData.agreeToTerms) {
-      newErrors.agreeToTerms = 'You must agree to the terms';
-    }
+    // if (!formData.agreeToTerms) {
+    //   newErrors.agreeToTerms = 'You must agree to the terms';
+    // }
 
     if (!profilePhoto) {
       toast.error('Profile photo is required');
       return false;
     }
-    
+
     if (!verificationDoc) {
       toast.error('Verification document is required');
       return false;
     }
 
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async () => {
-    if (!validateForm()) return;
+ const handleSubmit = async () => {
+   if (!validateForm()) return;
 
-    try {
-      await registerUser({
-        name: formData.fullName,
-        email: formData.email,
-        password: formData.createPassword,
-        credentials: formData.credentials,
-        training_practice: formData.yearInTraining,
-        address: formData.location,
-        current_practice: formData.currentPractice,
-        bio: formData.briefBio,
-        instagram: formData.instagramUrl || undefined,
-        linkedin: formData.linkedinUrl || undefined,
-        twitter_x: formData.twitterUrl || undefined,
-        facebook: formData.facebookUrl || undefined,
-        avatar: profilePhoto,
-        verification_doc: verificationDoc,
-        type: 'user',
-      }).unwrap();
+   const payload = {
+     name: formData.fullName,
+     email: formData.email,
+     password: formData.createPassword,
+     credentials: formData.credentials,
+     training_practice: formData.yearInTraining,
+     address: formData.location,
+     current_practice: formData.currentPractice,
+     bio: formData.briefBio,
+     specialty: formData.specialty,
+     instagram: formData.instagramUrl || undefined,
+     linkedin: formData.linkedinUrl || undefined,
+     twitter_x: formData.twitterUrl || undefined,
+     facebook: formData.facebookUrl || undefined,
+     avatar: profilePhoto,
+     verification_doc: verificationDoc,
+     type: 'user',
+   };
 
-      toast.success('Registration successful! Check your email.');
-      
-    } catch (err) {
-      const error = err as { data?: { message?: string } };
-
-      toast.error(
-        error?.data?.message || 'Something went wrong during registration.',
-      );
-    }
-  };
- console.log(handleSubmit, 'mjcsdcsd')
-
+   await onSubmit?.(payload);
+ };
+  // console.log(handleSubmit, 'mjcsdcsd');
 
   return (
     <div className="z-40  font-[manrope] py-6 mb-12">
@@ -534,6 +531,7 @@ opacity-xl font-[manrope]"
             <div className="mt-6 flex  items-center   gap-4 mx-6 space-x-6">
               {/* submit button */}
               <button
+                type="button"
                 onClick={handleSubmit}
                 disabled={isLoading}
                 className="bg-[#B79E6B] text-white hover:bg-[#a08c5f] transition-colors rounded-[8px] px-[24px] py-[14px]  w-full  h-[54px] font-medium cursor-pointer"

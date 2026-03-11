@@ -26,7 +26,7 @@ const TOPICS = [
   'TMJ',
   'Trauma',
 ];
-const DIFFICULTIES: Difficulty[] = ['Intern', 'Senior', 'Boards'];
+const DIFFICULTIES: Difficulty[] = ['Intern', 'Senior', 'Board'];
 
 export default function CreateQuestionForm() {
   const { register, control, handleSubmit, watch, setValue, reset } =
@@ -46,79 +46,54 @@ export default function CreateQuestionForm() {
   const { fields, append } = useFieldArray({ control, name: 'answers' });
   const [editorKey, setEditorKey] = React.useState(0);
   const [createQuestion, { isLoading }] = useCreateQuestionMutation();
-
+  
   // File attachment state
   const [attachedFile, setAttachedFile] = React.useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // const handleAddMoreQuestionSameScenario = () => {
-  //   const currentDifficulty = watch('difficulty');
-  //   const currentTopic = watch('topic');
+  
+const onSubmit = async (data: QuestionFormValues) => {
+  try {
+    const formData = new FormData();
 
-  //   reset({
-  //     difficulty: currentDifficulty,
-  //     topic: currentTopic,
-  //     questionStem: '',
-  //     questionTitle: '',
-  //     explanation: '',
-  //     keyPoints: '',
-  //     keepingPoint: '',
-  //     memoryTrick: '',
-  //     references: '',
-  //     answers: [
-  //       { id: '1', text: '', isCorrect: false },
-  //       { id: '2', text: '', isCorrect: true },
-  //     ],
-  //   });
+    formData.append('question_title', data.questionTitle);
+    formData.append('question_steam', data.questionStem);
+    formData.append('explanation', data.explanation || '');
+    formData.append('why_incorrect', data.keyPoints || '');
+    formData.append('pimping_point', data.keepingPoint || '');
+    formData.append('memory_trick', data.memoryTrick || '');
+    formData.append('referance', data.references || '');
+    formData.append('difficulty', data.difficulty);
 
-  //   setEditorKey(prev => prev + 1);
-  //   setAttachedFile(null);
+    formData.append('topic', JSON.stringify([data.topic]));
 
-  //   toast.success('New question added for the same scenario');
-  // };
+    const answerOptions = data.answers.map(a => ({
+      option_text: a.text,
+      is_correct: a.isCorrect,
+    }));
 
-  const onSubmit = async (data: QuestionFormValues) => {
-;
-    try {
-      const formData = new FormData();
+    formData.append('answerOptions', JSON.stringify(answerOptions));
 
-      formData.append('question_title', data.questionTitle);
-      formData.append('question_steam', data.questionStem);
-      formData.append('explanation', data.explanation || '');
-      formData.append('why_incorrect', data.keyPoints || '');
-      formData.append('pimping_point', data.keepingPoint || '');
-      formData.append('memory_trick', data.memoryTrick || '');
-      formData.append('reference', data.references || '');
-      formData.append('difficulty', data.difficulty);
+    if (attachedFile) {
+      formData.append('explanation_image', attachedFile);
+    }
 
-      formData.append('topic', JSON.stringify([data.topic]));
+    const result = await createQuestion(formData);
 
-      formData.append(
-        'answerOptions',
-        JSON.stringify(
-          data.answers.map(a => ({
-            option_text: a.text,
-            is_correct: a.isCorrect,
-          })),
-        ),
-      );
-
-      if (attachedFile) {
-        formData.append('explanation_image', attachedFile);
-      }
-
-      await createQuestion(formData).unwrap();
-      console.log(formData, 'jaskfds');
-      toast.success('Question created successfully!');
+    if ("data" in result) {
+      toast.success("Question created successfully");
       reset();
       setEditorKey(prev => prev + 1);
       setAttachedFile(null);
-    } catch (error: any) {
-      console.log(error?.data);
-      toast.error(error?.data?.message || 'Failed to create question');
+    } else {
+      toast.error(result.error?.data?.message || "Failed to create question");
     }
-  };
 
+  } catch (err) {
+    console.error(err);
+    toast.error("Something went wrong");
+  }
+};
   const handleAttachFileClick = () => {
     fileInputRef.current?.click();
   };
@@ -312,8 +287,8 @@ export default function CreateQuestionForm() {
         </h2>
         <RichTextEditor
           key={`references-${editorKey}`}
-          value={watch('references')}
-          onChange={v => setValue('references', v)}
+          value={watch('referances')}
+          onChange={v => setValue('referances', v)}
         />
 
         <div className="flex items-center justify-center md:w-fit mx-auto">

@@ -9,6 +9,7 @@ export interface RegisterPayload {
   address: string;
   current_practice: string;
   bio: string;
+  specialty: string;
   instagram?: string;
   linkedin?: string;
   twitter_x?: string;
@@ -31,7 +32,11 @@ export const registerApi = baseApi.injectEndpoints({
 
         Object.entries(body).forEach(([key, value]) => {
           if (value !== undefined && value !== null && value !== '') {
-            formData.append(key, value as string | Blob);
+            if (value instanceof File) {
+              formData.append(key, value);
+            } else {
+              formData.append(key, String(value));
+            }
           }
         });
 

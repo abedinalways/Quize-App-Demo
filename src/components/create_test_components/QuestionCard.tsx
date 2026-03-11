@@ -12,6 +12,7 @@ import { useCompleteTestMutation } from '@/app/redux/api/testSessionApi';
 import { useRouter } from 'next/navigation';
 
 interface QuestionCardProps {
+  testId: string;
   quizDetails: QuizDetailsUI;
   selectedAnswerId: string | null;
   showExplanation: boolean;
@@ -23,6 +24,7 @@ interface QuestionCardProps {
 }
 
 const QuestionCard: React.FC<QuestionCardProps> = ({
+  testId,
   quizDetails,
   selectedAnswerId,
   showExplanation,
@@ -31,20 +33,19 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
   onSubmit,
   onToggleHide,
   isQuestionHidden,
-  testId
 }) => {
-  console.log(quizDetails, 'l====================================================osadfpof');
   const [completeTest] = useCompleteTestMutation();
   const router = useRouter();
+
   const handleSubmitTest = async () => {
     try {
       await completeTest({ test_id: testId }).unwrap();
-
       router.push(`/dashboard/user/test-result/${testId}`);
     } catch (err) {
       console.error('Submit test failed', err);
     }
   };
+
   return (
     <div className="w-full bg-[#f9f9f5] md:my-8 md:p-[32px] rounded-[16px]">
       {showExplanation && (
@@ -58,19 +59,27 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
       )}
 
       <CardHeader>
-        <p className="text-sm md:text-[20px] text-gray-700 leading-relaxed font-normal">
-          {quizDetails?.question_title} {quizDetails?.question_steam}
-        </p>
+        {quizDetails?.question_title && (
+          <h2 className="text-lg md:text-2xl font-bold text-[#01281e] mb-3">
+            {quizDetails.question_title}
+          </h2>
+        )}
+
+        <div
+          className="prose prose-sm md:prose-base max-w-none text-gray-700"
+          dangerouslySetInnerHTML={{
+            __html: quizDetails?.question_steam || '',
+          }}
+        />
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* OPTIONS */}
         <RadioGroup
           value={selectedAnswerId ?? undefined}
           onValueChange={onAnswerChange}
           className="space-y-4"
         >
-          {quizDetails.answerOptions.map(option => {
+          {quizDetails.answerOptions.map((option, index) => {
             const isCorrect = option.id === quizDetails.correctAnswerId;
             const isSelected = option.id === selectedAnswerId;
             const isWrongSelected = showExplanation && isSelected && !isCorrect;
@@ -105,7 +114,9 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                         'opacity-60 line-through',
                     )}
                   >
-                    <span className="font-bold mr-2">{option.id}.</span>
+                    <span className="font-bold mr-2">
+                      {String.fromCharCode(65 + index)}.
+                    </span>
                     {option.option_text}
                   </Label>
                 </div>
@@ -122,7 +133,6 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
           })}
         </RadioGroup>
 
-        {/* RESULT BOX */}
         {showExplanation && (
           <div
             className={cn(
@@ -136,7 +146,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
               <div className="font-bold text-lg">
                 {isUserCorrect ? (
                   <h4 className="text-[#20AC19] flex items-center gap-2 text-xs md:text-sm">
-                    <CorrectIcon /> Correct ({quizDetails.correctAnswerId})
+                    <CorrectIcon /> Correct
                   </h4>
                 ) : (
                   <h4 className="text-red-600 flex gap-2 items-center text-xs md:text-sm">
@@ -157,7 +167,6 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
           </div>
         )}
 
-        {/* ACTION BUTTONS */}
         <div className="md:flex justify-between items-center space-y-2 md:space-y-0">
           <Btn
             text="Submit Answer"
@@ -171,7 +180,6 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
             )}
           />
 
-          {/* Submit Test should be handled by parent, not hardcoded */}
           <button
             onClick={handleSubmitTest}
             className="bg-[#b79e6b] text-sm w-full md:w-[164px] h-[50px] text-white font-semibold rounded-md"

@@ -274,6 +274,7 @@ const QuizQuestionView: React.FC<QuizQuestionViewProps> = ({
                 }}
               >
                 <QuestionCard
+                  testId={testId}
                   quizDetails={quizDetails}
                   selectedAnswerId={selectedAnswerId}
                   showExplanation={showExplanation}

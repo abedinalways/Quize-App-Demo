@@ -1,15 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import QuizQuestionView from '@/components/create_test_components/QuizQuestionView';
 
-import type {
-  MarkedQuestion,
-  QuizDetailsUI,
-  QuizQuestionDataUI,
-  Question,
-} from '@/types/test-session';
+import type { MarkedQuestion, QuizQuestionDataUI } from '@/types/test-session';
 
 const TEST_SESSION_KEY_PREFIX = 'TEST_SESSION_';
 const MARKED_KEY_PREFIX = 'MARKED_QUESTIONS_';
@@ -23,91 +18,53 @@ function safeParseJSON<T>(value: string | null): T | null {
   }
 }
 
-function toQuizDetailsUI(q: Question): QuizDetailsUI {
-  const optionsArray = Array.isArray(q.answer_options) ? q.answer_options : [];
-
-  return {
-    id: q.id,
-    question_title: q.question_title ?? '',
-    question_steam: q.question_statement ?? '',
-    answerOptions: optionsArray.map(o => ({
-      id: o.id,
-      option_text: o.option_text ?? '',
-      percentage: 0,
-    })),
-    userAnswerId: null,
-    correctAnswerId: null,
-    explanation: null,
-  };
+interface StoredTestSession {
+  id: string;
+  total_questions: number;
+  questions: QuizQuestionDataUI[];
 }
 
 export default function CreateTestPage() {
   const router = useRouter();
   const params = useParams();
-  const testId = params?.testId as string | undefined;
 
-  
-  const session = useMemo(() => {
-    if (!testId) return null;
+ const testId = params?.testId as string | undefined;
 
-    return safeParseJSON<{
-      id: string;
-      total_questions: number;
-      questions: Question[];
-    }>(sessionStorage.getItem(`${TEST_SESSION_KEY_PREFIX}${testId}`));
-  }, [testId]);
+  const [questions, setQuestions] = useState<QuizQuestionDataUI[]>([]);
+  const [markedQuestions, setMarkedQuestions] = useState<MarkedQuestion[]>([]);
+  const [currentQuestion, setCurrentQuestion] = useState(1);
+  const [loading, setLoading] = useState(true);
 
-  /**
-   * 2️⃣ Hooks must always run
-   */
-  const [currentQuestion, setCurrentQuestion] = useState<number>(1);
+  useEffect(() => {
+    if (!testId) return;
 
-  const [markedQuestions, setMarkedQuestions] = useState<MarkedQuestion[]>(
-    () =>
+    const session = safeParseJSON<StoredTestSession>(
+      sessionStorage.getItem(`${TEST_SESSION_KEY_PREFIX}${testId}`),
+    );
+
+    const marks =
       safeParseJSON<MarkedQuestion[]>(
         localStorage.getItem(`${MARKED_KEY_PREFIX}${testId}`),
-      ) ?? [],
-  );
+      ) ?? [];
 
-  /**
-   * 3️⃣ Derive questions safely
-   */
-  const questions: QuizDetailsUI[] = useMemo(() => {
-    if (!session?.questions) return [];
-    return session.questions.map(toQuizDetailsUI);
-  }, [session]);
+    if (!session || !session.questions || session.questions.length === 0) {
+      console.log('No test session found for:', testId);
+      router.replace('/dashboard/user/create-test');
+      return;
+    }
+
+    console.log('Loaded session:', session);
+
+    setQuestions(session.questions);
+    setMarkedQuestions(marks);
+    setLoading(false);
+  }, [testId, router]);
 
   const totalQuestions = questions.length;
-
-  
-  useEffect(() => {
-    if (!session || totalQuestions === 0) {
-      router.replace('/dashboard/user/create-test/');
-    }
-  }, [session, totalQuestions, router]);
-
-  /**
-   * 5️⃣ Prepare quiz data
-   */
-  const data: QuizQuestionDataUI | null = useMemo(() => {
-    if (!questions.length) return null;
-
-    const quizDetails = questions[currentQuestion - 1];
-    if (!quizDetails) return null;
-
-    return {
-      testProgress: {
-        currentQuestion,
-        totalQuestions,
-        questionID: quizDetails.id,
-      },
-      quizDetails,
-    };
-  }, [currentQuestion, questions, totalQuestions]);
+  const data = questions[currentQuestion - 1] ?? null;
 
   const persistMarks = (updated: MarkedQuestion[]) => {
     if (!testId) return;
-
     localStorage.setItem(
       `${MARKED_KEY_PREFIX}${testId}`,
       JSON.stringify(updated),
@@ -124,7 +81,6 @@ export default function CreateTestPage() {
       router.push(`/dashboard/user/test-complete/${testId}`);
       return;
     }
-
     setCurrentQuestion(prev => prev + 1);
   };
 
@@ -137,6 +93,7 @@ export default function CreateTestPage() {
   const onToggleMarkLocalOnly = () => {
     setMarkedQuestions(prev => {
       const exists = prev.some(q => q.index === currentQuestion);
+      const current = questions[currentQuestion - 1];
 
       const updated = exists
         ? prev.filter(q => q.index !== currentQuestion)
@@ -144,9 +101,9 @@ export default function CreateTestPage() {
             ...prev,
             {
               index: currentQuestion,
-              questionId: questions[currentQuestion - 1]?.id ?? '',
-              title: questions[currentQuestion - 1]?.question_title ?? '',
-              question: questions[currentQuestion - 1]?.question_steam ?? '',
+              questionId: current?.testProgress?.questionID ?? '',
+              title: current?.quizDetails?.question_title ?? '',
+              question: current?.quizDetails?.question_steam ?? '',
             },
           ];
 
@@ -155,12 +112,18 @@ export default function CreateTestPage() {
     });
   };
 
-  if (!data) return null;
+  if (loading) {
+    return <div className="p-6">Loading test...</div>;
+  }
+
+  if (!data || !testId) {
+    return <div className="p-6">No test data found.</div>;
+  }
 
   return (
     <QuizQuestionView
       key={data.testProgress.questionID}
-      testId={testId!}
+      testId={testId}
       data={data}
       markedQuestions={markedQuestions}
       onToggleMark={onToggleMarkLocalOnly}
@@ -168,7 +131,7 @@ export default function CreateTestPage() {
       onNext={onNext}
       onPrevious={onPrevious}
       currentQuestion={currentQuestion}
-      setQuestions={() => {}}
+      setQuestions={setQuestions}
     />
   );
 }
