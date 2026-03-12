@@ -35,6 +35,25 @@ export default function CreateTestPage() {
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [loading, setLoading] = useState(true);
 
+
+  useEffect(() => {
+    if (!testId || questions.length === 0) return;
+
+    const existing = safeParseJSON<StoredTestSession>(
+      sessionStorage.getItem(`${TEST_SESSION_KEY_PREFIX}${testId}`),
+    );
+
+    if (!existing) return;
+
+    sessionStorage.setItem(
+      `${TEST_SESSION_KEY_PREFIX}${testId}`,
+      JSON.stringify({
+        ...existing,
+        questions,
+      }),
+    );
+  }, [questions, testId]);
+
   useEffect(() => {
     if (!testId) return;
 
@@ -56,6 +75,7 @@ export default function CreateTestPage() {
     console.log('Loaded session:', session);
 
     setQuestions(session.questions);
+    console.log(questions, 'questions------------------------')
     setMarkedQuestions(marks);
     setLoading(false);
   }, [testId, router]);

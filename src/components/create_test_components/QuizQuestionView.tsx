@@ -29,7 +29,8 @@ interface QuizQuestionViewProps {
   onNext: () => void;
   onPrevious: () => void;
   onJumpTo?: (index: number) => void;
-  setQuestions: React.Dispatch<React.SetStateAction<QuizDetailsUI[]>>;
+  // setQuestions: React.Dispatch<React.SetStateAction<QuizDetailsUI[]>>;
+  setQuestions: React.Dispatch<React.SetStateAction<QuizQuestionDataUI[]>>;
   currentQuestion: number;
 }
 
@@ -52,14 +53,11 @@ const QuizQuestionView: React.FC<QuizQuestionViewProps> = ({
   const [showExplanation, setShowExplanation] = useState<boolean>(false);
 
   useEffect(() => {
-    if (quizDetails.userAnswerId) {
-      setSelectedAnswer(quizDetails.userAnswerId);
-    } else {
-      setSelectedAnswer(null);
-    }
-
+    setSelectedAnswer(quizDetails.userAnswerId ?? null);
     setShowExplanation(Boolean(quizDetails.correctAnswerId));
+    setIsQuestionHidden(false);
   }, [questionID]);
+
   const [isQuestionHidden, setIsQuestionHidden] = useState<boolean>(false);
   const [zoomLevel, setZoomLevel] = useState<number>(1);
 
@@ -107,24 +105,32 @@ const QuizQuestionView: React.FC<QuizQuestionViewProps> = ({
         question_id: questionID,
       }).unwrap();
 
+      if (!res?.success || !res?.data) {
+        throw new Error(res?.message || 'Failed to fetch result');
+      }
+
       setQuestions(prev => {
         const copy = [...prev];
         const idx = currentQuestion - 1;
         const existing = copy[idx];
+
         if (!existing) return prev;
 
         const percentages = res.data.answer_percentages ?? {};
 
         copy[idx] = {
           ...existing,
-          userAnswerId: res.data.user_answer_id,
-          correctAnswerId: res.data.correct_answer_id,
-          explanation: res.data.explanation,
-          answerOptions: existing.answerOptions.map(o => ({
-            ...o,
-            percentage:
-              typeof percentages[o.id] === 'number' ? percentages[o.id] : 0,
-          })),
+          quizDetails: {
+            ...existing.quizDetails,
+            userAnswerId: res.data.user_answer_id,
+            correctAnswerId: res.data.correct_answer_id,
+            explanation: res.data.explanation,
+            answerOptions: existing.quizDetails.answerOptions.map(o => ({
+              ...o,
+              percentage:
+                typeof percentages[o.id] === 'number' ? percentages[o.id] : 0,
+            })),
+          },
         };
 
         return copy;

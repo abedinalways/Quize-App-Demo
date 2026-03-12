@@ -19,7 +19,7 @@ import { useStartTestMutation } from '@/app/redux/api/startTestApi';
 const TOPICS = [
   { label: 'Anesthesia/Medicine', value: 'Anesthesia_Medicine' },
   { label: 'Dentoalveolar', value: 'Dentoalveolar' },
-  { label: 'Reconstruction', value: 'Reconstruction' },
+  { label: 'Reconstruction', value: 'Recontraction' },
   { label: 'Cancer', value: 'Cancer' },
   { label: 'Implants', value: 'Implants' },
   { label: 'TMJ', value: 'TMJ' },
@@ -69,56 +69,109 @@ export function CreateTestContent() {
     setSelectedDifficulty(level);
   };
 
-  const handleStartTest = async () => {
-    try {
-      if (!numQuestions || selectedTopics.length === 0) return;
+  // const handleStartTest = async () => {
+  //   try {
+  //     if (!numQuestions || selectedTopics.length === 0) return;
 
-      const payload = {
-        total_questions: Number(numQuestions),
-        test_mode: selectedStatus
-          .filter(s => s === 'Used' || s === 'Unused')
-          .map(s => s.toLowerCase()),
-        difficulty: selectedDifficulty,
-        topic: selectedTopics,
-      };
+  //     const payload = {
+  //       total_questions: Number(numQuestions),
+  //       test_mode: selectedStatus
+  //         .filter(s => s === 'Used' || s === 'Unused')
+  //         .map(s => s.toLowerCase()),
+  //       difficulty: selectedDifficulty,
+  //       topic: selectedTopics,
+  //     };
 
-      const res = await startTest(payload).unwrap();
+  //     const res = await startTest(payload).unwrap();
 
-      const testSession = {
-        id: res.data.id,
-        total_questions: res.data.total_questions,
-        questions: res.data.questions.map((q, index) => ({
-          testProgress: {
-            questionID: q.id,
-            totalQuestions: res.data.total_questions,
-            currentQuestion: index + 1,
-          },
-          quizDetails: {
-            question_title: q.question_title,
-            question_steam: q.question_steam,
-            answerOptions: q.answerOptions.map(opt => ({
-              id: opt.id,
-              option_text: opt.option_text,
-              percentage: 0,
-            })),
-            correctAnswerId: null,
-            userAnswerId: null,
-            explanation: null,
-          },
-        })),
-      };
+  //     const testSession = {
+  //       id: res.data.id,
+  //       total_questions: res.data.total_questions,
+  //       questions: res.data.questions.map((q, index) => ({
+  //         testProgress: {
+  //           questionID: q.id,
+  //           totalQuestions: res.data.total_questions,
+  //           currentQuestion: index + 1,
+  //         },
+  //         quizDetails: {
+  //           question_title: q.question_title,
+  //           question_steam: q.question_steam,
+  //           answerOptions: q.answerOptions.map(opt => ({
+  //             id: opt.id,
+  //             option_text: opt.option_text,
+  //             percentage: 0,
+  //           })),
+  //           correctAnswerId: null,
+  //           userAnswerId: null,
+  //           explanation: null,
+  //         },
+  //       })),
+  //     };
 
-      sessionStorage.setItem(
-        `TEST_SESSION_${res.data.id}`,
-        JSON.stringify(testSession),
-      );
+  //     sessionStorage.setItem(
+  //       `TEST_SESSION_${res.data.id}`,
+  //       JSON.stringify(testSession),
+  //     );
 
-      router.push(`/dashboard/user/create-test/${res.data.id}`);
-    } catch (error) {
-      console.error('Failed to start test', error);
-    }
-  };
+  //     router.push(`/dashboard/user/create-test/${res.data.id}`);
+  //   } catch (error) {
+  //     console.error('Failed to start test', error);
+  //   }
+  // };
+  
+ const handleStartTest = async () => {
+   try {
+     if (!numQuestions || selectedTopics.length === 0) return;
 
+     const payload = {
+       total_questions: Number(numQuestions),
+       test_mode: selectedStatus
+         .filter(s => s === 'Used' || s === 'Unused')
+         .map(s => s.toLowerCase()),
+       difficulty: selectedDifficulty,
+       topic: selectedTopics,
+     };
+
+     const res = await startTest(payload).unwrap();
+
+     if (!res.success || !res.data) {
+       throw new Error(res.message || 'Failed to create test');
+     }
+
+     const testSession = {
+       id: res.data.id,
+       total_questions: res.data.total_questions,
+       questions: res.data.questions.map((q, index) => ({
+         testProgress: {
+           questionID: q.id,
+           totalQuestions: res?.data?.total_questions,
+           currentQuestion: index + 1,
+         },
+         quizDetails: {
+           question_title: q.question_title,
+           question_steam: q.question_steam,
+           answerOptions: q.answerOptions.map(opt => ({
+             id: opt.id,
+             option_text: opt.option_text,
+             percentage: 0,
+           })),
+           correctAnswerId: null,
+           userAnswerId: null,
+           explanation: null,
+         },
+       })),
+     };
+
+     sessionStorage.setItem(
+       `TEST_SESSION_${res.data.id}`,
+       JSON.stringify(testSession),
+     );
+
+     router.push(`/dashboard/user/create-test/${res.data.id}`);
+   } catch (error) {
+     console.error('Start test failed:', error);
+   }
+ };
   return (
     <div className="flex-1 max-w-5xl space-y-4 pt-2 test-container text-[#4b5563]">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2">
